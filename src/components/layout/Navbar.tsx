@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import {
   Flame,
@@ -17,6 +18,7 @@ import {
   X,
   QrCode,
   Radio,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -160,6 +162,18 @@ export default function Navbar() {
                 )}
               </div>
 
+              {/* Admin Panel Link */}
+              {currentUser.role === 'ADMIN' && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:scale-105 transition-all shadow-md"
+                  title="Panel de Administrador"
+                >
+                  <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="hidden lg:inline">Panel Admin</span>
+                </Link>
+              )}
+
               {/* User Profile Pill */}
               <button
                 onClick={() => setIsProfileOpen(true)}
@@ -230,6 +244,16 @@ export default function Navbar() {
             </div>
 
             <div className="pt-2 border-t border-white/[0.08] grid grid-cols-2 gap-2">
+              {currentUser.role === 'ADMIN' && (
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="col-span-2 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-black text-amber-300 bg-amber-500/15 border border-amber-500/30 shadow-md"
+                >
+                  <ShieldCheck className="w-4 h-4 text-amber-400" />
+                  <span>Entrar al Panel de Administrador</span>
+                </Link>
+              )}
               <button
                 onClick={() => {
                   setIsWhatsAppQROpen(true);

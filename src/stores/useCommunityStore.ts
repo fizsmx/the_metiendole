@@ -50,6 +50,50 @@ interface CommunityState {
   streamEvents: StreamSchedule[];
   achievements: AchievementItem[];
   leaderboard: LeaderboardUser[];
+
+  // Admin Panel State & Actions
+  adminTab: 'overview' | 'giveaways' | 'polls' | 'users' | 'feed' | 'streams' | 'shop';
+  setAdminTab: (tab: 'overview' | 'giveaways' | 'polls' | 'users' | 'feed' | 'streams' | 'shop') => void;
+  createGiveaway: (giveaway: {
+    title: string;
+    description: string;
+    prize: string;
+    costPoints: number;
+    minLevel: number;
+    winnersCount: number;
+    endsAt: string;
+    imageUrl?: string;
+  }) => void;
+  deleteGiveaway: (id: string) => void;
+  createPoll: (poll: {
+    question: string;
+    description?: string;
+    category: string;
+    options: string[];
+  }) => void;
+  deletePoll: (id: string) => void;
+  togglePollStatus: (id: string) => void;
+  updateUserRole: (userId: string, role: UserProfile['role']) => void;
+  adjustUserPoints: (userId: string, delta: number) => void;
+  deletePost: (postId: string) => void;
+  togglePostPinned: (postId: string) => void;
+  toggleStreamLive: (streamId: string) => void;
+  addStreamEvent: (event: {
+    title: string;
+    description: string;
+    gameTitle: string;
+    scheduledAt: string;
+    youtubeUrl: string;
+  }) => void;
+  addShopItem: (item: {
+    name: string;
+    description: string;
+    pricePoints: number;
+    category: 'ROLE' | 'BADGE' | 'SHOUTOUT' | 'DIGITAL' | 'MERCH';
+    icon: string;
+    stock: number;
+  }) => void;
+  toggleAdminRole: () => void;
 }
 
 export const useCommunityStore = create<CommunityState>((set, get) => ({
@@ -71,7 +115,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     image: '/images/brand/logo-circle.png',
     banner: '/images/brand/banner.jpg',
     bio: '🔥 Hincha número 1 de Metele Nomás. Aquí no se duerme en los directos.',
-    role: 'VIP',
+    role: 'ADMIN',
     points: 1250,
     level: 3,
     streak: 12,
@@ -627,4 +671,124 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       rank: 6,
     },
   ],
+
+  // Admin Implementations
+  adminTab: 'overview',
+  setAdminTab: (tab) => set({ adminTab: tab }),
+
+  toggleAdminRole: () => {
+    const { currentUser } = get();
+    set({
+      currentUser: {
+        ...currentUser,
+        role: currentUser.role === 'ADMIN' ? 'MEMBER' : 'ADMIN',
+      },
+    });
+  },
+
+  createGiveaway: (giveaway) => {
+    const { giveaways } = get();
+    const newGw: GiveawayItem = {
+      ...giveaway,
+      id: `gw_${Date.now()}`,
+      status: 'ACTIVE',
+      participantsCount: 0,
+      isEntered: false,
+    };
+    set({ giveaways: [newGw, ...giveaways] });
+  },
+
+  deleteGiveaway: (id) => {
+    const { giveaways } = get();
+    set({ giveaways: giveaways.filter((g) => g.id !== id) });
+  },
+
+  createPoll: (newPoll) => {
+    const { polls } = get();
+    const pollItem: PollItem = {
+      id: `poll_${Date.now()}`,
+      question: newPoll.question,
+      description: newPoll.description,
+      category: newPoll.category,
+      featured: true,
+      active: true,
+      totalVotes: 0,
+      options: newPoll.options.map((optText, index) => ({
+        id: `opt_${Date.now()}_${index}`,
+        text: optText,
+        votesCount: 0,
+        percentage: 0,
+      })),
+    };
+    set({ polls: [pollItem, ...polls] });
+  },
+
+  deletePoll: (id) => {
+    const { polls } = get();
+    set({ polls: polls.filter((p) => p.id !== id) });
+  },
+
+  togglePollStatus: (id) => {
+    const { polls } = get();
+    set({
+      polls: polls.map((p) => (p.id === id ? { ...p, active: !p.active } : p)),
+    });
+  },
+
+  updateUserRole: (userId, role) => {
+    const { leaderboard } = get();
+    set({
+      leaderboard: leaderboard.map((u) => (u.id === userId ? { ...u, role } : u)),
+    });
+  },
+
+  adjustUserPoints: (userId, delta) => {
+    const { leaderboard } = get();
+    set({
+      leaderboard: leaderboard.map((u) =>
+        u.id === userId ? { ...u, points: Math.max(0, u.points + delta) } : u
+      ),
+    });
+  },
+
+  deletePost: (postId) => {
+    const { posts } = get();
+    set({ posts: posts.filter((p) => p.id !== postId) });
+  },
+
+  togglePostPinned: (postId) => {
+    const { posts } = get();
+    set({
+      posts: posts.map((p) => (p.id === postId ? { ...p, pinned: !p.pinned } : p)),
+    });
+  },
+
+  toggleStreamLive: (streamId) => {
+    const { streamEvents } = get();
+    set({
+      streamEvents: streamEvents.map((s) =>
+        s.id === streamId ? { ...s, isLive: !s.isLive } : s
+      ),
+    });
+  },
+
+  addStreamEvent: (event) => {
+    const { streamEvents } = get();
+    const newEvent: StreamSchedule = {
+      ...event,
+      id: `evt_${Date.now()}`,
+      durationMin: 120,
+      isLive: false,
+    };
+    set({ streamEvents: [newEvent, ...streamEvents] });
+  },
+
+  addShopItem: (item) => {
+    const { shopItems } = get();
+    const newItem: ShopReward = {
+      ...item,
+      id: `item_${Date.now()}`,
+    };
+    set({ shopItems: [...shopItems, newItem] });
+  },
 }));
