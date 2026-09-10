@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCommunityStore } from '@/stores/useCommunityStore';
@@ -19,6 +19,7 @@ import {
   QrCode,
   Radio,
   ShieldCheck,
+  ChevronDown,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -33,10 +34,24 @@ export default function Navbar() {
   } = useCommunityStore();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [claimToast, setClaimToast] = useState<string | null>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
 
-  const navItems: Array<{
-    id: 'home' | 'sorteos' | 'votaciones' | 'leaderboard' | 'muro' | 'clips' | 'tienda' | 'calendario';
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
+        setMoreDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Primary visible tabs in center navbar (compact width)
+  const primaryNavItems: Array<{
+    id: 'home' | 'sorteos' | 'votaciones' | 'leaderboard' | 'muro';
     label: string;
     icon: React.ComponentType<{ className?: string }>;
     badge?: string;
@@ -46,10 +61,20 @@ export default function Navbar() {
     { id: 'votaciones', label: 'Votaciones', icon: Vote },
     { id: 'leaderboard', label: 'Ranking', icon: Trophy },
     { id: 'muro', label: 'Muro', icon: MessageSquare },
-    { id: 'clips', label: 'Clips', icon: Video },
-    { id: 'tienda', label: 'Tienda', icon: ShoppingBag },
-    { id: 'calendario', label: 'En Vivo', icon: Calendar },
   ];
+
+  // Secondary items placed inside clean "Más" dropdown
+  const secondaryNavItems: Array<{
+    id: 'clips' | 'tienda' | 'calendario';
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }> = [
+    { id: 'clips', label: 'Clips Épicos', icon: Video },
+    { id: 'tienda', label: 'Tienda de Puntos', icon: ShoppingBag },
+    { id: 'calendario', label: 'Directos en Vivo', icon: Calendar },
+  ];
+
+  const allNavItems = [...primaryNavItems, ...secondaryNavItems];
 
   const handleClaim = () => {
     const res = claimDailyReward();
@@ -59,81 +84,124 @@ export default function Navbar() {
     }
   };
 
+  const isSecondaryActive = secondaryNavItems.some((item) => item.id === activeTab);
+
   return (
     <>
-      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-[#0a0a0f]/90 border-b border-white/[0.08] shadow-2xl">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo Brand */}
+      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-[#09090f]/90 border-b border-white/[0.08] shadow-2xl">
+        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6">
+          <div className="flex items-center justify-between h-16">
+            {/* 1. Logo Brand */}
             <button
               onClick={() => setActiveTab('home')}
-              className="flex items-center gap-2.5 sm:gap-3 group text-left focus:outline-none shrink-0"
+              className="flex items-center gap-2.5 group text-left focus:outline-none shrink-0"
             >
-              <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden p-0.5 bg-gradient-to-tr from-[#E91E8C] to-[#F5A623] shadow-[0_0_20px_rgba(233,30,140,0.4)] group-hover:scale-105 transition-transform duration-300">
+              <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden p-0.5 bg-gradient-to-tr from-[#E91E8C] to-[#F5A623] shadow-[0_0_15px_rgba(233,30,140,0.35)] group-hover:scale-105 transition-transform duration-300">
                 <div className="w-full h-full bg-[#0a0a0f] rounded-[10px] overflow-hidden flex items-center justify-center">
                   <Image
                     src="/images/brand/logo-icon.png"
-                    alt="Metele Nomas Icon"
-                    width={40}
-                    height={40}
-                    className="object-contain w-8 h-8 sm:w-10 sm:h-10"
+                    alt="Metele Nomas"
+                    width={36}
+                    height={36}
+                    className="object-contain w-7 h-7 sm:w-8 sm:h-8"
                     priority
                   />
                 </div>
               </div>
               <div>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <span className="font-black text-base sm:text-xl tracking-tight text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-[#E91E8C] group-hover:to-[#F5A623] transition-colors">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-black text-sm sm:text-base tracking-tight text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-[#E91E8C] group-hover:to-[#F5A623] transition-colors">
                     METELE NOMÁS
                   </span>
-                  <span className="flex items-center gap-1 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest px-1.5 sm:px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
-                    <Radio className="w-2.5 h-2.5 animate-pulse" />
+                  <span className="flex items-center gap-1 text-[9px] uppercase font-bold tracking-widest px-1.5 py-0.2 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
+                    <Radio className="w-2 h-2 animate-pulse" />
                     <span className="hidden xs:inline">Directo</span>
                   </span>
                 </div>
-                <p className="text-[10px] sm:text-xs text-zinc-400 font-medium tracking-wide hidden sm:block">
+                <p className="text-[10px] text-zinc-400 font-medium tracking-wide hidden 2xl:block">
                   Comunidad Oficial • Podcast & Stream
                 </p>
               </div>
             </button>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden xl:flex items-center gap-1 bg-white/[0.03] p-1.5 rounded-2xl border border-white/[0.06]">
-              {navItems.map((item) => {
+            {/* 2. Desktop Navigation (Compact & Streamlined) */}
+            <nav className="hidden lg:flex items-center gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06]">
+              {primaryNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                       isActive
-                        ? 'text-white bg-gradient-to-r from-[#E91E8C] to-[#F5A623] shadow-lg shadow-[#E91E8C]/20'
+                        ? 'text-white bg-gradient-to-r from-[#E91E8C] to-[#F5A623] shadow-md shadow-[#E91E8C]/25'
                         : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-3.5 h-3.5" />
                     <span>{item.label}</span>
                     {item.badge && (
-                      <span className="text-[10px] bg-red-500 text-white font-bold px-1.5 py-0.2 rounded-full uppercase">
+                      <span className="text-[9px] bg-red-500 text-white font-black px-1.5 py-0.1 rounded-full uppercase leading-none">
                         {item.badge}
                       </span>
                     )}
                   </button>
                 );
               })}
+
+              {/* Más Dropdown Menu */}
+              <div className="relative" ref={moreRef}>
+                <button
+                  onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    isSecondaryActive
+                      ? 'text-white bg-gradient-to-r from-[#E91E8C] to-[#F5A623] shadow-md'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <span>Más</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${moreDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {moreDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-44 bg-[#12121c] border border-white/[0.1] rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl z-50 animate-scale-in">
+                    {secondaryNavItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveTab(item.id);
+                            setMoreDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                            isActive
+                              ? 'bg-gradient-to-r from-[#E91E8C] to-[#F5A623] text-white'
+                              : 'text-zinc-300 hover:bg-white/[0.06] hover:text-white'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </nav>
 
-            {/* User Controls & Daily Claim */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* WhatsApp Community Button (Tablet/Desktop) */}
+            {/* 3. User Controls & Quick Action Buttons */}
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+              {/* WhatsApp Community Button */}
               <button
                 onClick={() => setIsWhatsAppQROpen(true)}
-                className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 transition-all hover:scale-105"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 transition-all hover:scale-105"
                 title="Grupo de WhatsApp"
               >
-                <QrCode className="w-4 h-4" />
-                <span>WhatsApp</span>
+                <QrCode className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">WhatsApp</span>
               </button>
 
               {/* Daily Login Claim Button */}
@@ -141,22 +209,22 @@ export default function Navbar() {
                 <button
                   onClick={handleClaim}
                   disabled={dailyClaimed}
-                  className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+                  className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-300 ${
                     dailyClaimed
                       ? 'bg-zinc-800/80 text-zinc-500 border border-zinc-700/40 cursor-default'
                       : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/20 hover:scale-105 animate-bounce'
                   }`}
                 >
-                  <Flame className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${dailyClaimed ? 'text-zinc-500' : 'text-yellow-200 fill-yellow-200'}`} />
-                  <span className="hidden sm:inline">
+                  <Flame className={`w-3.5 h-3.5 ${dailyClaimed ? 'text-zinc-500' : 'text-yellow-200 fill-yellow-200'}`} />
+                  <span className="hidden md:inline">
                     {dailyClaimed ? `Racha: ${currentUser.streak}d` : 'Reclamar'}
                   </span>
-                  <span className="sm:hidden">
+                  <span className="md:hidden">
                     {dailyClaimed ? `${currentUser.streak}d` : '+Pts'}
                   </span>
                 </button>
                 {claimToast && (
-                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-black text-amber-300 bg-[#12121a] px-2 py-0.5 rounded-md border border-amber-500/40 shadow-xl whitespace-nowrap z-50">
+                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-black text-amber-300 bg-[#12121a] px-2 py-0.5 rounded-md border border-amber-500/40 shadow-xl whitespace-nowrap z-50 animate-fade-in">
                     {claimToast}
                   </div>
                 )}
@@ -166,51 +234,50 @@ export default function Navbar() {
               {currentUser.role === 'ADMIN' && (
                 <Link
                   href="/admin"
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:scale-105 transition-all shadow-md"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:scale-105 transition-all shadow-sm"
                   title="Panel de Administrador"
                 >
-                  <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span className="hidden lg:inline">Panel Admin</span>
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="hidden md:inline">Admin</span>
                 </Link>
               )}
 
               {/* User Profile Pill */}
               <button
                 onClick={() => setIsProfileOpen(true)}
-                className="flex items-center gap-2 pl-1.5 sm:pl-2 pr-2 sm:pr-3 py-1 sm:py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-[#E91E8C]/50 hover:bg-white/[0.08] transition-all group"
+                className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-[#E91E8C]/50 hover:bg-white/[0.08] transition-all group"
               >
-                <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden border border-[#E91E8C]/40">
+                <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-[#E91E8C]/40 shrink-0">
                   <Image
                     src={currentUser.image}
                     alt={currentUser.name}
-                    width={32}
-                    height={32}
+                    width={28}
+                    height={28}
                     className="object-cover w-full h-full"
                   />
                 </div>
                 <div className="text-left hidden md:block">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <span className="text-xs font-bold text-white group-hover:text-[#F5A623] transition-colors">
                       {currentUser.nickname}
                     </span>
-                    <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-gradient-to-r from-[#E91E8C] to-[#F5A623] text-white">
+                    <span className="text-[9px] font-black px-1 rounded bg-gradient-to-r from-[#E91E8C] to-[#F5A623] text-white leading-tight">
                       Nv.{currentUser.level}
                     </span>
                   </div>
-                  <div className="text-[11px] font-semibold text-amber-400 flex items-center gap-1">
-                    <span>★</span>
-                    <span>{currentUser.points.toLocaleString()} pts</span>
+                  <div className="text-[10px] font-semibold text-amber-400 leading-none">
+                    ★ {currentUser.points.toLocaleString()} pts
                   </div>
                 </div>
               </button>
 
-              {/* Mobile Hamburger */}
+              {/* Mobile Hamburger Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="xl:hidden p-2 rounded-xl text-zinc-400 hover:text-white bg-white/[0.04] border border-white/[0.08]"
+                className="lg:hidden p-2 rounded-xl text-zinc-400 hover:text-white bg-white/[0.04] border border-white/[0.08]"
                 aria-label="Menú móvil"
               >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
               </button>
             </div>
           </div>
@@ -218,9 +285,9 @@ export default function Navbar() {
 
         {/* Mobile Dropdown Drawer */}
         {mobileMenuOpen && (
-          <div className="xl:hidden bg-[#0e0e16]/95 backdrop-blur-2xl border-b border-white/[0.08] px-4 py-4 space-y-3 animate-slide-down">
+          <div className="lg:hidden bg-[#0e0e16]/95 backdrop-blur-2xl border-b border-white/[0.08] px-4 py-4 space-y-3 animate-slide-down">
             <div className="grid grid-cols-2 gap-2">
-              {navItems.map((item) => {
+              {allNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
                 return (
@@ -278,8 +345,8 @@ export default function Navbar() {
         )}
       </header>
 
-      {/* Floating Bottom Navigation Bar for Mobile (Mobile-first app experience) */}
-      <div className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0c0c14]/95 backdrop-blur-xl border-t border-white/[0.08] px-2 py-2 shadow-2xl">
+      {/* Floating Bottom Navigation Bar for Mobile */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0c0c14]/95 backdrop-blur-xl border-t border-white/[0.08] px-2 py-1.5 shadow-2xl">
         <div className="flex items-center justify-around">
           {[
             { id: 'home' as const, label: 'Inicio', icon: Sparkles },
@@ -294,13 +361,13 @@ export default function Navbar() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all ${
+                className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all ${
                   isActive
                     ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#E91E8C] to-[#F5A623] font-black scale-105'
                     : 'text-zinc-400 hover:text-white font-medium'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-[#E91E8C]' : 'text-zinc-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-[#E91E8C]' : 'text-zinc-400'}`} />
                 <span className="text-[10px]">{item.label}</span>
               </button>
             );

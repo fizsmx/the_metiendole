@@ -3,7 +3,7 @@
 import React from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import HeroSection from '@/components/landing/HeroSection';
+import HomeDashboard from '@/components/landing/HomeDashboard';
 import GiveawaysSection from '@/components/giveaways/GiveawaysSection';
 import PollsSection from '@/components/polls/PollsSection';
 import LeaderboardSection from '@/components/leaderboard/LeaderboardSection';
@@ -26,18 +26,7 @@ export default function HomePage() {
 
       {/* Main Dynamic View */}
       <div className="flex-1">
-        {activeTab === 'home' && (
-          <>
-            <HeroSection />
-            <div className="space-y-4">
-              <GiveawaysSection />
-              <PollsSection />
-              <LeaderboardSection />
-              <CommunityFeedSection />
-            </div>
-          </>
-        )}
-
+        {activeTab === 'home' && <HomeDashboard />}
         {activeTab === 'sorteos' && <GiveawaysSection />}
         {activeTab === 'votaciones' && <PollsSection />}
         {activeTab === 'leaderboard' && <LeaderboardSection />}
