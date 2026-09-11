@@ -120,7 +120,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               });
             }
           }
-          user.id = dbUser.id;
+          if (dbUser?.id) {
+            user.id = dbUser.id;
+          }
         } catch (err) {
           console.warn('Could not sync user in signIn callback:', err);
         }
@@ -129,7 +131,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id || token.sub || 'usr_' + Math.random().toString(36).slice(2, 8);
         token.name = user.name;
         token.email = user.email;
         token.picture = user.image;
@@ -137,6 +139,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.points = isSuperAdminEmail(user.email) ? 9999 : 150;
         token.level = 1;
         token.streak = 1;
+        token.nickname = user.name?.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'metedor';
       }
       
       if (token.email) {
@@ -194,5 +197,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   pages: {
     signIn: '/',
+    error: '/',
   },
 });
