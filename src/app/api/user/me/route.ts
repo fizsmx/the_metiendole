@@ -19,7 +19,23 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ authenticated: false, user: null }, { status: 404 });
+      return NextResponse.json({
+        authenticated: true,
+        user: {
+          id: session.user.id,
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image || '/images/brand/logo-circle.png',
+          nickname: session.user.nickname || session.user.name || 'Metedor',
+          role: session.user.role || 'MEMBER',
+          points: session.user.points || 150,
+          level: session.user.level || 1,
+          streak: session.user.streak || 1,
+          dailyClaimed: false,
+          enteredGiveawayIds: [],
+          votedPolls: [],
+        },
+      });
     }
 
     // Check if daily reward claimed today
