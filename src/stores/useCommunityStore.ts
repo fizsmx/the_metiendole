@@ -97,7 +97,6 @@ interface CommunityState {
     icon: string;
     stock: number;
   }) => void;
-  toggleAdminRole: () => void;
 }
 
 export const useCommunityStore = create<CommunityState>((set, get) => ({
@@ -718,16 +717,6 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   // Admin Implementations
   adminTab: 'overview',
   setAdminTab: (tab) => set({ adminTab: tab }),
-
-  toggleAdminRole: () => {
-    const { currentUser } = get();
-    set({
-      currentUser: {
-        ...currentUser,
-        role: currentUser.role === 'ADMIN' ? 'MEMBER' : 'ADMIN',
-      },
-    });
-  },
 
   createGiveaway: (giveaway) => {
     const { giveaways } = get();

@@ -23,6 +23,7 @@ import {
   ChevronDown,
   User,
 } from 'lucide-react';
+import { isSuperAdminEmail } from '@/lib/constants';
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -118,6 +119,7 @@ export default function Navbar() {
 
   const isSecondaryActive = secondaryNavItems.some((item) => item.id === activeTab);
   const isAuthenticated = status === 'authenticated';
+  const isSuperAdmin = isAuthenticated && isSuperAdminEmail(session?.user?.email);
 
   return (
     <>
@@ -263,11 +265,11 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Admin Panel Link */}
-              {isAuthenticated && currentUser.role === 'ADMIN' && (
+              {/* Admin Panel Link (Only for the Super Admin Fisbert) */}
+              {isSuperAdmin && (
                 <Link
                   href="/admin"
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:scale-105 transition-all shadow-sm"
+                  className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:scale-105 transition-all shadow-sm"
                   title="Panel de Administrador"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -279,7 +281,7 @@ export default function Navbar() {
               {isAuthenticated ? (
                 <button
                   onClick={() => setIsProfileOpen(true)}
-                  className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-[#E91E8C]/50 hover:bg-white/[0.08] transition-all group"
+                  className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-[#E91E8C]/50 hover:bg-white/[0.08] transition-all group shrink-0"
                 >
                   <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-[#E91E8C]/40 shrink-0">
                     <Image
@@ -307,10 +309,11 @@ export default function Navbar() {
               ) : (
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-[#E91E8C] to-[#F5A623] hover:scale-105 shadow-md shadow-[#E91E8C]/25 transition-all"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-[#E91E8C] to-[#F5A623] hover:scale-105 shadow-md shadow-[#E91E8C]/25 transition-all shrink-0"
                 >
                   <User className="w-3.5 h-3.5" />
-                  <span>Entrar con Google</span>
+                  <span className="hidden sm:inline">Entrar con Google</span>
+                  <span className="sm:hidden">Entrar</span>
                 </button>
               )}
 
@@ -354,14 +357,14 @@ export default function Navbar() {
             </div>
 
             <div className="pt-2 border-t border-white/[0.08] grid grid-cols-2 gap-2">
-              {isAuthenticated && currentUser.role === 'ADMIN' && (
+              {isSuperAdmin && (
                 <Link
                   href="/admin"
                   onClick={() => setMobileMenuOpen(false)}
                   className="col-span-2 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-black text-amber-300 bg-amber-500/15 border border-amber-500/30 shadow-md"
                 >
                   <ShieldCheck className="w-4 h-4 text-amber-400" />
-                  <span>Entrar al Panel de Administrador</span>
+                  <span>Panel de Administrador (Fisbert)</span>
                 </Link>
               )}
               <button

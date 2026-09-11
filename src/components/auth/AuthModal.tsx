@@ -4,12 +4,10 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { signIn } from 'next-auth/react';
 import { useCommunityStore } from '@/stores/useCommunityStore';
-import { X, Sparkles, ShieldCheck, UserCheck, Flame, ArrowRight, Info } from 'lucide-react';
+import { X, Sparkles, ShieldCheck } from 'lucide-react';
 
 export default function AuthModal() {
   const { isAuthModalOpen, setIsAuthModalOpen } = useCommunityStore();
-  const [customName, setCustomName] = useState('');
-  const [customEmail, setCustomEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,42 +20,9 @@ export default function AuthModal() {
       await signIn('google', { callbackUrl: '/' });
     } catch (err) {
       console.error(err);
-      setError('No se pudo conectar con Google. Revisa tus credenciales en .env o usa acceso directo abajo.');
+      setError('No se pudo conectar con Google. Por favor, intenta de nuevo.');
       setIsLoading(false);
     }
-  };
-
-  const handleDirectSignIn = async (email: string, name: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await signIn('credentials', {
-        email,
-        name,
-        redirect: false,
-        callbackUrl: '/',
-      });
-      if (res?.error) {
-        setError('Error al iniciar sesión directa');
-      } else {
-        setIsAuthModalOpen(false);
-        window.location.reload();
-      }
-    } catch (err) {
-      console.error(err);
-      setError('Error al conectar con la base de datos local');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCustomSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customEmail) {
-      setError('Ingresa un correo electrónico');
-      return;
-    }
-    handleDirectSignIn(customEmail, customName || customEmail.split('@')[0]);
   };
 
   return (
@@ -133,92 +98,32 @@ export default function AuthModal() {
           </button>
         </div>
 
-        {/* Divider */}
-        <div className="relative my-5">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-white/[0.08]" />
+        {/* Benefits List */}
+        <div className="mt-5 space-y-2.5 text-left bg-white/[0.02] border border-white/[0.06] p-4 rounded-2xl">
+          <div className="flex items-center gap-2.5 text-xs text-zinc-300">
+            <div className="w-5 h-5 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+              ✓
+            </div>
+            <span>Participa en sorteos de auriculares y merch oficial</span>
           </div>
-          <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest">
-            <span className="bg-[#101018] px-3 text-zinc-500">
-              o acceso rápido de desarrollo
-            </span>
+          <div className="flex items-center gap-2.5 text-xs text-zinc-300">
+            <div className="w-5 h-5 rounded-full bg-[#E91E8C]/10 text-[#E91E8C] flex items-center justify-center shrink-0">
+              ✓
+            </div>
+            <span>Vota en directo los temas de cada episodio del podcast</span>
+          </div>
+          <div className="flex items-center gap-2.5 text-xs text-zinc-300">
+            <div className="w-5 h-5 rounded-full bg-[#F5A623]/10 text-[#F5A623] flex items-center justify-center shrink-0">
+              ✓
+            </div>
+            <span>Acumula puntos de fidelidad y sube en el ranking de metedores</span>
           </div>
         </div>
 
-        {/* 2. Fast Dev / Test User Accounts (Persisted in dev.db) */}
-        <div className="space-y-2 text-left">
-          <p className="text-[11px] font-bold text-zinc-400 mb-1 flex items-center gap-1">
-            <span>Cuentas de prueba en base de datos local:</span>
-          </p>
-
-          <button
-            onClick={() => handleDirectSignIn('host@metelenomas.com', 'Fisbert Chávez')}
-            disabled={isLoading}
-            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-xs text-amber-200 transition-all group"
-          >
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-amber-400" />
-              <div>
-                <span className="font-black text-white block">Fisbert Chávez (Host / Admin)</span>
-                <span className="text-[10px] text-zinc-400">host@metelenomas.com • 9,999 pts</span>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-amber-400 group-hover:translate-x-1 transition-transform" />
-          </button>
-
-          <button
-            onClick={() => handleDirectSignIn('nico@example.com', 'Nico Gamer')}
-            disabled={isLoading}
-            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] text-xs text-zinc-300 transition-all group"
-          >
-            <div className="flex items-center gap-2">
-              <Flame className="w-4 h-4 text-[#F5A623]" />
-              <div>
-                <span className="font-bold text-white block">Nico Gamer (Metedor VIP)</span>
-                <span className="text-[10px] text-zinc-400">nico@example.com • 2,450 pts</span>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
-        {/* 3. Custom Guest Sign In Form */}
-        <form onSubmit={handleCustomSubmit} className="mt-4 pt-4 border-t border-white/[0.06] text-left space-y-2">
-          <p className="text-[11px] font-bold text-zinc-400">
-            O crea una cuenta con tu apodo:
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="text"
-              placeholder="Tu Apodo (ej: Metedor_99)"
-              value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#E91E8C]"
-            />
-            <input
-              type="email"
-              placeholder="correo@ejemplo.com"
-              value={customEmail}
-              onChange={(e) => setCustomEmail(e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#E91E8C]"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-[#E91E8C] to-[#F5A623] hover:scale-[1.01] transition-all flex items-center justify-center gap-1.5 shadow-md"
-          >
-            <UserCheck className="w-3.5 h-3.5" />
-            <span>Crear y Entrar a la Comunidad</span>
-          </button>
-        </form>
-
-        {/* Help Tip */}
-        <div className="mt-5 p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-[10px] text-zinc-400 flex items-start gap-2 text-left">
-          <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold text-zinc-300">Nota para Google OAuth:</span> Las credenciales reales se configuran en el archivo <code className="text-amber-400 font-mono">.env</code> de tu servidor (<code className="text-zinc-300">GOOGLE_CLIENT_ID</code> y <code className="text-zinc-300">GOOGLE_CLIENT_SECRET</code>).
-          </div>
+        {/* Security & Privacy Assurance */}
+        <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-zinc-400">
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>Acceso seguro vía Google • Sin contraseñas ni spam</span>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
+import { isSuperAdminEmail } from '@/lib/constants';
 
 const isPostgres = !!process.env.DATABASE_URL?.startsWith('postgres');
 
@@ -29,6 +30,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const email = credentials?.email as string;
         if (!email) return null;
 
+        const role = isSuperAdminEmail(email) ? 'ADMIN' : 'MEMBER';
+
         try {
           // Buscar usuario existente en la base de datos si está disponible
           let user = await prisma.user.findUnique({
@@ -46,8 +49,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 name: rawName,
                 nickname,
                 image: '/images/brand/logo-circle.png',
-                role: email.includes('host') || email.includes('admin') || email.includes('fisbert') ? 'ADMIN' : 'MEMBER',
-                points: 150, // 100 base + 50 de bienvenida
+                role,
+                points: role === 'ADMIN' ? 9999 : 150,
                 level: 1,
                 streak: 1,
                 bio: 'Nuevo metedor oficial de la comunidad de Metele Nomás.',
@@ -60,7 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             name: user.name,
             email: user.email,
             image: user.image,
-            role: user.role,
+            role: isSuperAdminEmail(user.email) ? 'ADMIN' : user.role,
             points: user.points,
             level: user.level,
             streak: user.streak,
@@ -74,8 +77,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             name: rawName,
             email,
             image: '/images/brand/logo-circle.png',
-            role: (email.includes('host') || email.includes('admin') || email.includes('fisbert')) ? 'ADMIN' : 'MEMBER',
-            points: 150,
+            role,
+            points: role === 'ADMIN' ? 9999 : 150,
             level: 1,
             streak: 1,
             nickname: rawName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'metedor',
@@ -91,8 +94,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.name = user.name;
         token.email = user.email;
         token.picture = user.image;
-        token.role = (user.email === 'fisbert.smx@gmail.com' || user.email === 'fisbertdarck@gmail.com' || user.email?.includes('host') || user.email?.includes('admin')) ? 'ADMIN' : 'MEMBER';
-        token.points = 150;
+        token.role = isSuperAdminEmail(user.email) ? 'ADMIN' : 'MEMBER';
+        token.points = isSuperAdminEmail(user.email) ? 9999 : 150;
         token.level = 1;
         token.streak = 1;
         token.nickname = user.name?.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'metedor';
@@ -104,7 +107,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             where: { email: token.email as string },
           });
           if (dbUser) {
-            token.role = dbUser.role;
+            token.role = isSuperAdminEmail(dbUser.email) ? 'ADMIN' : dbUser.role;
             token.points = dbUser.points;
             token.level = dbUser.level;
             token.streak = dbUser.streak;
@@ -138,10 +141,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             where: { id: user.id },
             data: {
               nickname: defaultNick,
-              points: 150, // Bono de bienvenida
+              points: isSuperAdminEmail(user.email) ? 9999 : 150, // Bono de bienvenida
               level: 1,
               streak: 1,
-              role: (user.email === 'fisbert.smx@gmail.com' || user.email === 'fisbertdarck@gmail.com' || user.email?.includes('host')) ? 'ADMIN' : 'MEMBER',
+              role: isSuperAdminEmail(user.email) ? 'ADMIN' : 'MEMBER',
             },
           });
         }

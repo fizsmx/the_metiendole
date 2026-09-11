@@ -15,13 +15,14 @@ import ProfileModal from '@/components/profile/ProfileModal';
 import WhatsAppQRModal from '@/components/whatsapp/WhatsAppQRModal';
 import GiveawayWheelModal from '@/components/giveaways/GiveawayWheelModal';
 import AuthModal from '@/components/auth/AuthModal';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 
 export default function HomePage() {
   const { activeTab } = useCommunityStore();
 
   return (
-    <main className="min-h-screen flex flex-col bg-[#0a0a0f] text-[#f0f0f5]">
+    <main className="min-h-screen flex flex-col bg-[#0a0a0f] text-[#f0f0f5] pb-16 lg:pb-0">
       {/* Header Bar */}
       <Navbar />
 
@@ -42,6 +43,9 @@ export default function HomePage() {
       <WhatsAppQRModal />
       <GiveawayWheelModal />
       <AuthModal />
+
+      {/* Mobile Fixed Bottom Navigation */}
+      <MobileBottomNav />
 
       {/* Footer */}
       <Footer />

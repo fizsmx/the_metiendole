@@ -11,15 +11,18 @@ import AdminShop from '@/components/admin/AdminShop';
 import CommunityFeedSection from '@/components/feed/CommunityFeedSection';
 import GiveawayWheelModal from '@/components/giveaways/GiveawayWheelModal';
 import { useCommunityStore } from '@/stores/useCommunityStore';
+import { useSession } from 'next-auth/react';
+import { isSuperAdminEmail } from '@/lib/constants';
 import { ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
-  const { adminTab, currentUser } = useCommunityStore();
+  const { data: session, status } = useSession();
+  const { adminTab } = useCommunityStore();
 
-  const isAdmin = currentUser.role === 'ADMIN' || currentUser.role === 'MODERATOR';
+  const isSuperAdmin = status === 'authenticated' && isSuperAdminEmail(session?.user?.email);
 
-  if (!isAdmin) {
+  if (!isSuperAdmin) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center p-6 text-center">
         <div className="p-4 rounded-3xl bg-red-500/10 border border-red-500/20 text-red-400 mb-4">
@@ -27,7 +30,7 @@ export default function AdminPage() {
         </div>
         <h1 className="text-2xl font-black text-white">Acceso Restringido</h1>
         <p className="text-sm text-zinc-400 max-w-sm mt-2">
-          Este panel es exclusivo para el streamer y moderadores de Metele Nomás.
+          Este panel de control es exclusivo para Fisbert (creador y único administrador oficial de Metele Nomás).
         </p>
         <Link
           href="/"
