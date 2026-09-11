@@ -33,6 +33,7 @@ export default function Navbar() {
     currentUser,
     setCurrentUser,
     syncFromDatabase,
+    syncUserFromDatabase,
     dailyClaimed,
     claimDailyReward,
     setIsProfileOpen,
@@ -50,7 +51,7 @@ export default function Navbar() {
     syncFromDatabase();
   }, [syncFromDatabase]);
 
-  // Synchronize authenticated session user into community store
+  // Synchronize authenticated session user into community store with real DB data
   useEffect(() => {
     if (session?.user) {
       setCurrentUser({
@@ -60,12 +61,10 @@ export default function Navbar() {
         email: session.user.email || '',
         image: session.user.image || '/images/brand/logo-circle.png',
         role: (session.user.role as 'ADMIN' | 'MODERATOR' | 'VIP' | 'MEMBER') || 'MEMBER',
-        points: session.user.points ?? 150,
-        level: session.user.level ?? 1,
-        streak: session.user.streak ?? 1,
       });
+      syncUserFromDatabase();
     }
-  }, [session, setCurrentUser]);
+  }, [session, setCurrentUser, syncUserFromDatabase]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -105,14 +104,17 @@ export default function Navbar() {
 
   const allNavItems = [...primaryNavItems, ...secondaryNavItems];
 
-  const handleClaim = () => {
+  const handleClaim = async () => {
     if (status !== 'authenticated') {
       setIsAuthModalOpen(true);
       return;
     }
-    const res = claimDailyReward();
+    const res = await claimDailyReward();
     if (res.success) {
       setClaimToast(`+${res.points} Pts!`);
+      setTimeout(() => setClaimToast(null), 3000);
+    } else if (res.message) {
+      setClaimToast(res.message);
       setTimeout(() => setClaimToast(null), 3000);
     }
   };

@@ -2,7 +2,22 @@
 
 import React, { useState } from 'react';
 import { useCommunityStore } from '@/stores/useCommunityStore';
-import { Plus, Star } from 'lucide-react';
+import { Plus, Star, Crown, Megaphone, Shirt, Award, Gift } from 'lucide-react';
+
+function getRewardIcon(category: string) {
+  switch (category) {
+    case 'ROLE':
+      return <Crown className="w-5 h-5 text-amber-400" />;
+    case 'SHOUTOUT':
+      return <Megaphone className="w-5 h-5 text-[#E91E8C]" />;
+    case 'MERCH':
+      return <Shirt className="w-5 h-5 text-cyan-400" />;
+    case 'BADGE':
+      return <Award className="w-5 h-5 text-yellow-400" />;
+    default:
+      return <Gift className="w-5 h-5 text-emerald-400" />;
+  }
+}
 
 export default function AdminShop() {
   const { shopItems, addShopItem } = useCommunityStore();
@@ -10,8 +25,8 @@ export default function AdminShop() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [pricePoints, setPricePoints] = useState(1000);
-  const [category] = useState<'ROLE' | 'BADGE' | 'SHOUTOUT' | 'DIGITAL' | 'MERCH'>('ROLE');
-  const [icon, setIcon] = useState('🎁');
+  const [category, setCategory] = useState<'ROLE' | 'BADGE' | 'SHOUTOUT' | 'DIGITAL' | 'MERCH'>('ROLE');
+  const [icon, setIcon] = useState('GIFT');
   const [stock] = useState(-1);
 
   const handleAdd = (e: React.FormEvent) => {
@@ -97,7 +112,7 @@ export default function AdminShop() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {shopItems.map((item) => (
           <div key={item.id} className="bg-[#12121c] border border-white/[0.08] rounded-2xl p-4 space-y-2">
-            <div className="text-2xl">{item.icon}</div>
+            <div className="p-2 rounded-xl bg-white/[0.04] inline-block border border-white/[0.06]">{getRewardIcon(item.category)}</div>
             <h4 className="text-sm font-bold text-white">{item.name}</h4>
             <div className="flex items-center justify-between text-xs pt-2 border-t border-white/[0.06]">
               <span className="text-amber-400 font-black flex items-center gap-1">

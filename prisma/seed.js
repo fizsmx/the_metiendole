@@ -31,7 +31,7 @@ async function main() {
       email: 'fisbertdarck@gmail.com',
       image: '/images/brand/logo-circle.png',
       banner: '/images/brand/banner.jpg',
-      bio: '🎙️ Creador y Host de Metele Nomás Podcast & Stream. ¡Bienvenidos a la plataforma oficial!',
+      bio: 'Creador y Host de Metele Nomás Podcast & Stream. ¡Bienvenidos a la plataforma oficial!',
       role: 'ADMIN',
       points: 1000,
       level: 3,
@@ -48,7 +48,7 @@ async function main() {
         code: 'FIRST_LOGIN',
         title: 'Primer Paso',
         description: 'Te uniste a la comunidad de Metele Nomás.',
-        icon: '🎉',
+        icon: 'SPARKLES',
         pointsReward: 50,
       },
     }),
@@ -57,7 +57,7 @@ async function main() {
         code: 'STREAK_7',
         title: 'Racha de Fuego',
         description: '7 días seguidos entrando a la plataforma.',
-        icon: '🔥',
+        icon: 'FLAME',
         pointsReward: 100,
       },
     }),
@@ -66,7 +66,7 @@ async function main() {
         code: 'POLL_MASTER',
         title: 'Voz del Pueblo',
         description: 'Participaste en 5 votaciones de la comunidad.',
-        icon: '🗳️',
+        icon: 'VOTE',
         pointsReward: 75,
       },
     }),
@@ -75,7 +75,7 @@ async function main() {
         code: 'LUCKY_ONE',
         title: 'Tocado por la Suerte',
         description: 'Ganaste tu primer sorteo en directo.',
-        icon: '👑',
+        icon: 'TROPHY',
         pointsReward: 200,
       },
     }),
@@ -84,7 +84,7 @@ async function main() {
         code: 'CLIP_MAKER',
         title: 'Director de Cine',
         description: 'Uno de tus clips fue seleccionado como Staff Pick.',
-        icon: '🎬',
+        icon: 'VIDEO',
         pointsReward: 150,
       },
     }),
@@ -104,8 +104,8 @@ async function main() {
 
   await prisma.giveaway.create({
     data: {
-      title: '🎧 Auriculares Gamer HyperX Cloud II + Polera Oficial',
-      description: '¡Sorteo de fin de mes para toda la banda de Metele Nomás! Entra con tus puntos y participa en vivo por la ruleta.',
+      title: 'Auriculares Gamer HyperX Cloud II + Polera Oficial',
+      description: 'Sorteo de fin de mes para toda la banda de Metele Nomás. Entra con tus puntos y participa en vivo por la ruleta.',
       prize: 'HyperX Cloud II + Merch Oficial',
       imageUrl: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=80',
       costPoints: 50,
@@ -119,7 +119,7 @@ async function main() {
 
   await prisma.giveaway.create({
     data: {
-      title: '🎟️ Pase VIP para la Cabina del Podcast + Cena con el Equipo',
+      title: 'Pase VIP para la Cabina del Podcast + Cena con el Equipo',
       description: 'Acceso exclusivo al detrás de cámaras del próximo episodio en vivo de Metele Nomás.',
       prize: 'Experiencia VIP en Cabina + Kit Merch Completo',
       imageUrl: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&auto=format&fit=crop&q=80',
@@ -135,7 +135,7 @@ async function main() {
   // 5. Crear Votaciones Oficiales (Sin votos falsos)
   await prisma.poll.create({
     data: {
-      question: '🎙️ ¿Qué tema o invitado quieren para el próximo capítulo del Podcast?',
+      question: '¿Qué tema o invitado quieren para el próximo capítulo del Podcast?',
       description: 'Vota y decide el contenido del próximo viernes. La opción ganadora se graba este fin de semana.',
       category: 'STREAM',
       featured: true,
@@ -143,10 +143,10 @@ async function main() {
       endsAt: endsIn3Days,
       options: {
         create: [
-          { text: '🎮 Noche de anécdotas de videojuegos y torneos retro', order: 1 },
-          { text: '🥊 Debate caliente: ¿Qué creadores de contenido están sobrevalorados?', order: 2 },
-          { text: '👻 Especial historias paranormales enviadas por la comunidad', order: 3 },
-          { text: '💡 Invitado sorpresa del mundo del streaming local', order: 4 },
+          { text: 'Noche de anécdotas de videojuegos y torneos retro', order: 1 },
+          { text: 'Debate caliente: ¿Qué creadores de contenido están sobrevalorados?', order: 2 },
+          { text: 'Especial historias paranormales enviadas por la comunidad', order: 3 },
+          { text: 'Invitado sorpresa del mundo del streaming local', order: 4 },
         ],
       },
     },
@@ -154,7 +154,7 @@ async function main() {
 
   await prisma.poll.create({
     data: {
-      question: '🍕 ¿Qué ordenamos para comer durante el stream?',
+      question: '¿Qué ordenamos para comer durante el stream?',
       description: 'Votación rápida comunitaria en vivo.',
       category: 'COMUNIDAD',
       featured: false,
@@ -173,7 +173,7 @@ async function main() {
   await prisma.post.create({
     data: {
       userId: adminUser.id,
-      content: '¡BIENVENIDOS OFICIALMENTE a la plataforma de la comunidad de METELE NOMÁS! 🚀 Aquí van a poder votar temas, participar en sorteos, acumular puntos y reclamar recompensas exclusivas. ¡Comenten abajo qué les parece la nueva casa! 👇',
+      content: '¡Bienvenidos oficialmente a la plataforma de la comunidad de METELE NOMÁS! Aquí van a poder votar temas, participar en sorteos, acumular puntos y reclamar recompensas exclusivas. ¡Comenten abajo qué les parece la nueva casa!',
       pinned: true,
       category: 'ANUNCIO',
     },
@@ -183,7 +183,7 @@ async function main() {
   await prisma.clip.create({
     data: {
       userId: adminUser.id,
-      title: '🎙️ Bienvenidos a Metele Nomás Podcast',
+      title: 'Bienvenidos a Metele Nomás Podcast',
       description: 'El podcast donde hablamos sin filtro de todo lo que pasa en el streaming y la cultura pop.',
       videoUrl: 'https://www.youtube.com/@metelenomas',
       thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80',
@@ -196,35 +196,35 @@ async function main() {
   await prisma.shopItem.createMany({
     data: [
       {
-        name: '👑 Rol VIP en la Comunidad + Discord',
+        name: 'Rol VIP en la Comunidad + Discord',
         description: 'Color dorado exclusivo, acceso a salas secretas y multiplicador de puntos 1.5x.',
         pricePoints: 1000,
         category: 'ROLE',
-        icon: '👑',
+        icon: 'ROLE',
         stock: -1,
       },
       {
-        name: '📢 Saludo & Dedicatoria en Vivo en el Podcast',
+        name: 'Saludo & Dedicatoria en Vivo en el Podcast',
         description: 'Mencionamos tu canal, proyecto o saludo personal durante el directo con tu nombre en pantalla.',
         pricePoints: 1500,
         category: 'SHOUTOUT',
-        icon: '🎙️',
+        icon: 'SHOUTOUT',
         stock: 10,
       },
       {
-        name: '👕 Polera Oficial "Metele Nomás" Signature',
+        name: 'Polera Oficial "Metele Nomás" Signature',
         description: 'Edición limitada en algodón premium con el logo bordado. Envío incluido.',
         pricePoints: 4000,
         category: 'MERCH',
-        icon: '👕',
+        icon: 'MERCH',
         stock: 5,
       },
       {
-        name: '⭐ Insignia Especial de Perfil: "Metedor Legendario"',
+        name: 'Insignia Especial de Perfil: "Metedor Legendario"',
         description: 'Badge animado que se muestra al lado de tu nombre en todo el sitio y en los comentarios.',
         pricePoints: 500,
         category: 'BADGE',
-        icon: '⭐',
+        icon: 'BADGE',
         stock: -1,
       },
     ],
@@ -241,7 +241,7 @@ async function main() {
 
   await prisma.streamEvent.create({
     data: {
-      title: '🎙️ Metele Nomás Podcast Ep. #48 — Debate en Vivo + Ruleta de Sorteos',
+      title: 'Metele Nomás Podcast Ep. #48 — Debate en Vivo + Ruleta de Sorteos',
       description: 'Transmisión en vivo por YouTube. Analizamos las noticias de la semana y giramos la ruleta para el giveaway de los auriculares!',
       gameTitle: 'Podcast & Charla',
       scheduledAt: fridayStream,
@@ -253,7 +253,7 @@ async function main() {
 
   await prisma.streamEvent.create({
     data: {
-      title: '🎮 Domingo de Chill & Juegos con la Comunidad',
+      title: 'Domingo de Chill & Juegos con la Comunidad',
       description: 'Jugamos con los miembros del canal. ¡Trae tus puntos listos para las votaciones!',
       gameTitle: 'Gaming & Comunidad',
       scheduledAt: sundayStream,

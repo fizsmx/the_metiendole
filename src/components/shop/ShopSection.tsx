@@ -2,7 +2,22 @@
 
 import React, { useState } from 'react';
 import { useCommunityStore } from '@/stores/useCommunityStore';
-import { ShoppingBag, Star, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ShoppingBag, Star, CheckCircle2, AlertCircle, Crown, Megaphone, Shirt, Award, Gift } from 'lucide-react';
+
+function getRewardIcon(category: string) {
+  switch (category) {
+    case 'ROLE':
+      return <Crown className="w-8 h-8 text-amber-400" />;
+    case 'SHOUTOUT':
+      return <Megaphone className="w-8 h-8 text-[#E91E8C]" />;
+    case 'MERCH':
+      return <Shirt className="w-8 h-8 text-cyan-400" />;
+    case 'BADGE':
+      return <Award className="w-8 h-8 text-yellow-400" />;
+    default:
+      return <Gift className="w-8 h-8 text-emerald-400" />;
+  }
+}
 
 export default function ShopSection() {
   const { shopItems, redeemItem, currentUser } = useCommunityStore();
@@ -36,8 +51,8 @@ export default function ShopSection() {
               className="bg-[#12121c] border border-white/[0.08] rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-4 hover:border-emerald-500/40 transition-all"
             >
               <div>
-                <div className="text-4xl p-3 rounded-2xl bg-white/[0.04] inline-block mb-3 border border-white/[0.06]">
-                  {item.icon}
+                <div className="p-3 rounded-2xl bg-white/[0.04] inline-flex items-center justify-center mb-3 border border-white/[0.06]">
+                  {getRewardIcon(item.category)}
                 </div>
                 <h3 className="text-base font-extrabold text-white">{item.name}</h3>
                 <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{item.description}</p>

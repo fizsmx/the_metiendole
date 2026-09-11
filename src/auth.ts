@@ -88,9 +88,48 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user }) {
+      if (user?.email) {
+        try {
+          const email = user.email.toLowerCase().trim();
+          const role = isSuperAdminEmail(email) ? 'ADMIN' : 'MEMBER';
+          let dbUser = await prisma.user.findUnique({ where: { email } });
+          if (!dbUser) {
+            const rawName = user.name || email.split('@')[0];
+            const nickname =
+              rawName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') ||
+              'metedor_' + Math.floor(Math.random() * 9000 + 1000);
+            dbUser = await prisma.user.create({
+              data: {
+                email,
+                name: rawName,
+                nickname,
+                image: user.image || '/images/brand/logo-circle.png',
+                role,
+                points: role === 'ADMIN' ? 9999 : 150,
+                level: 1,
+                streak: 1,
+                bio: 'Miembro oficial de la comunidad de Metele Nomás.',
+              },
+            });
+          } else {
+            if (isSuperAdminEmail(email) && dbUser.role !== 'ADMIN') {
+              dbUser = await prisma.user.update({
+                where: { id: dbUser.id },
+                data: { role: 'ADMIN' },
+              });
+            }
+          }
+          user.id = dbUser.id;
+        } catch (err) {
+          console.warn('Could not sync user in signIn callback:', err);
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id || token.sub || 'usr_' + Math.random().toString(36).slice(2, 8);
+        token.id = user.id;
         token.name = user.name;
         token.email = user.email;
         token.picture = user.image;
@@ -98,15 +137,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.points = isSuperAdminEmail(user.email) ? 9999 : 150;
         token.level = 1;
         token.streak = 1;
-        token.nickname = user.name?.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'metedor';
       }
       
-      if (token.id) {
+      if (token.email) {
         try {
+          const email = (token.email as string).toLowerCase().trim();
           const dbUser = await prisma.user.findUnique({
-            where: { email: token.email as string },
+            where: { email },
           });
           if (dbUser) {
+            token.id = dbUser.id;
             token.role = isSuperAdminEmail(dbUser.email) ? 'ADMIN' : dbUser.role;
             token.points = dbUser.points;
             token.level = dbUser.level;
@@ -114,7 +154,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             token.nickname = dbUser.nickname || dbUser.name || token.nickname;
           }
         } catch (e) {
-          // Si la DB aún no está sincronizada o no es accesible, continuamos con los datos del token
           console.warn('DB lookup skipped in jwt callback:', e);
         }
       }

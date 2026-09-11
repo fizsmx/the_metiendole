@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { useCommunityStore } from '@/stores/useCommunityStore';
-import { QrCode, MessageCircle, Heart } from 'lucide-react';
+import { QrCode, MessageCircle, Heart, Gift, Vote, Trophy, ShoppingBag, Video } from 'lucide-react';
 import { YoutubeIcon } from '@/components/ui/Icons';
 
 export default function Footer() {
@@ -58,45 +58,50 @@ export default function Footer() {
           {/* Quick Links */}
           <div className="space-y-3">
             <h3 className="text-white font-bold text-sm tracking-wider uppercase">Plataforma</h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2.5 text-sm">
               <li>
                 <button
                   onClick={() => setActiveTab('sorteos')}
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors flex items-center gap-2"
                 >
-                  🎰 Sorteos Activos
+                  <Gift className="w-4 h-4 text-amber-400" />
+                  <span>Sorteos Activos</span>
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => setActiveTab('votaciones')}
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors flex items-center gap-2"
                 >
-                  📊 Votaciones del Podcast
+                  <Vote className="w-4 h-4 text-[#E91E8C]" />
+                  <span>Votaciones del Podcast</span>
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => setActiveTab('leaderboard')}
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors flex items-center gap-2"
                 >
-                  🏆 Tabla de Clasificación
+                  <Trophy className="w-4 h-4 text-yellow-400" />
+                  <span>Tabla de Clasificación</span>
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => setActiveTab('tienda')}
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors flex items-center gap-2"
                 >
-                  🛒 Tienda de Recompensas
+                  <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                  <span>Tienda de Recompensas</span>
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => setActiveTab('clips')}
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors flex items-center gap-2"
                 >
-                  🎬 Momentos Épicos
+                  <Video className="w-4 h-4 text-red-400" />
+                  <span>Momentos Épicos</span>
                 </button>
               </li>
             </ul>

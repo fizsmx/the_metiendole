@@ -25,20 +25,21 @@ interface CommunityState {
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
   syncFromDatabase: () => Promise<void>;
+  syncUserFromDatabase: () => Promise<void>;
   setCurrentUser: (user: Partial<UserProfile>) => void;
 
   // Current User
   currentUser: UserProfile;
   dailyClaimed: boolean;
-  claimDailyReward: () => { success: boolean; points: number };
+  claimDailyReward: () => Promise<{ success: boolean; points: number; message?: string }>;
 
   // Data Collections
   giveaways: GiveawayItem[];
-  enterGiveaway: (id: string) => { success: boolean; message: string };
+  enterGiveaway: (id: string) => Promise<{ success: boolean; message: string }>;
   spinWheelWinners: () => string;
 
   polls: PollItem[];
-  votePoll: (pollId: string, optionId: string) => void;
+  votePoll: (pollId: string, optionId: string) => Promise<void>;
 
   posts: PostItem[];
   createPost: (content: string, category: PostItem['category']) => void;
@@ -116,19 +117,58 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     set({ currentUser: { ...currentUser, ...partialUser } });
   },
 
+  syncUserFromDatabase: async () => {
+    try {
+      const res = await fetch('/api/user/me');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.authenticated && data.user) {
+        const u = data.user;
+        const current = get().currentUser;
+        set({
+          currentUser: {
+            ...current,
+            id: u.id,
+            name: u.name || current.name,
+            nickname: u.nickname || current.nickname,
+            email: u.email || current.email,
+            image: u.image || current.image,
+            role: u.role || current.role,
+            points: typeof u.points === 'number' ? u.points : current.points,
+            level: typeof u.level === 'number' ? u.level : current.level,
+            streak: typeof u.streak === 'number' ? u.streak : current.streak,
+          },
+          dailyClaimed: !!u.dailyClaimed,
+          giveaways: get().giveaways.map((g) => ({
+            ...g,
+            isEntered: (u.enteredGiveawayIds || []).includes(g.id),
+          })),
+          polls: get().polls.map((p) => {
+            const vote = (u.votedPolls || []).find((v: { pollId: string; optionId: string }) => v.pollId === p.id);
+            return vote ? { ...p, userVotedOptionId: vote.optionId } : p;
+          }),
+        });
+      }
+    } catch (e) {
+      console.error('Error syncing user from database:', e);
+    }
+  },
+
   syncFromDatabase: async () => {
     try {
       const res = await fetch('/api/community/sync');
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.success) {
-        set({
-          giveaways: data.giveaways.length > 0 ? data.giveaways : get().giveaways,
-          polls: data.polls.length > 0 ? data.polls : get().polls,
-          leaderboard: data.leaderboard.length > 0 ? data.leaderboard : get().leaderboard,
-          posts: data.posts.length > 0 ? data.posts : get().posts,
-        });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          set({
+            giveaways: data.giveaways.length > 0 ? data.giveaways : get().giveaways,
+            polls: data.polls.length > 0 ? data.polls : get().polls,
+            leaderboard: data.leaderboard.length > 0 ? data.leaderboard : get().leaderboard,
+            posts: data.posts.length > 0 ? data.posts : get().posts,
+          });
+        }
       }
+      await get().syncUserFromDatabase();
     } catch (e) {
       console.error('Error syncing store from database:', e);
     }
@@ -152,28 +192,50 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   },
   dailyClaimed: false,
 
-  claimDailyReward: () => {
+  claimDailyReward: async () => {
     const { currentUser, dailyClaimed } = get();
-    if (dailyClaimed || currentUser.id === 'guest') return { success: false, points: 0 };
+    if (dailyClaimed || currentUser.id === 'guest') {
+      return { success: false, points: 0, message: 'Ya reclamaste tu recompensa de hoy' };
+    }
 
-    const reward = 50 + currentUser.streak * 5;
-    set({
-      dailyClaimed: true,
-      currentUser: {
-        ...currentUser,
-        points: currentUser.points + reward,
-        streak: currentUser.streak + 1,
-      },
-    });
-    return { success: true, points: reward };
+    try {
+      const res = await fetch('/api/user/claim-daily', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        if (data.alreadyClaimed) {
+          set({
+            dailyClaimed: true,
+            currentUser: {
+              ...currentUser,
+              points: typeof data.newPoints === 'number' ? data.newPoints : currentUser.points,
+              streak: typeof data.streak === 'number' ? data.streak : currentUser.streak,
+            },
+          });
+        }
+        return { success: false, points: 0, message: data.error || 'Error al reclamar' };
+      }
+
+      set({
+        dailyClaimed: true,
+        currentUser: {
+          ...currentUser,
+          points: data.newPoints,
+          streak: data.streak,
+        },
+      });
+      return { success: true, points: data.pointsAdded, message: `+${data.pointsAdded} pts!` };
+    } catch (e) {
+      console.error('Error claiming daily reward:', e);
+      return { success: false, points: 0, message: 'Error de red' };
+    }
   },
 
   // Sorteos
   giveaways: [
     {
       id: 'gw_1',
-      title: '🎧 Auriculares Gamer HyperX Cloud II + Polera Oficial',
-      description: '¡Sorteo exclusivo para la comunidad de Metele Nomás! Entra con 50 puntos acumulados.',
+      title: 'Auriculares Gamer HyperX Cloud II + Polera Oficial',
+      description: 'Sorteo exclusivo para la comunidad de Metele Nomás. Entra con 50 puntos acumulados.',
       prize: 'HyperX Cloud II Wireless + Merch Pack',
       imageUrl: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=700&auto=format&fit=crop&q=80',
       costPoints: 50,
@@ -186,8 +248,8 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     },
     {
       id: 'gw_2',
-      title: '🎟️ Pase VIP a la Cabina del Podcast + Cena con el Equipo',
-      description: 'Vive la experiencia del podcast en persona y cena con Fisbert y los invitados especiales.',
+      title: 'Pase VIP a la Cabina del Podcast + Cena con el Equipo',
+      description: 'Vive la experiencia del podcast en persona y comparte con Fisbert y los invitados especiales.',
       prize: 'Experiencia VIP Cabina + Cena Completa',
       imageUrl: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=700&auto=format&fit=crop&q=80',
       costPoints: 200,
@@ -200,7 +262,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     },
   ],
 
-  enterGiveaway: (id) => {
+  enterGiveaway: async (id) => {
     const { currentUser, giveaways } = get();
     const giveaway = giveaways.find((g) => g.id === id);
     if (!giveaway) return { success: false, message: 'Sorteo no encontrado' };
@@ -217,37 +279,45 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       return { success: false, message: `Requiere Nivel ${giveaway.minLevel}` };
     }
 
-    // Persistir inscripción en SQLite real
-    fetch('/api/giveaways/enter', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ giveawayId: id }),
-    }).catch(console.error);
+    try {
+      const res = await fetch('/api/giveaways/enter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ giveawayId: id }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, message: data.error || 'Error al participar en el sorteo' };
+      }
 
-    set({
-      currentUser: {
-        ...currentUser,
-        points: currentUser.points - giveaway.costPoints,
-      },
-      giveaways: giveaways.map((g) =>
-        g.id === id
-          ? { ...g, isEntered: true, participantsCount: g.participantsCount + 1 }
-          : g
-      ),
-    });
+      set({
+        currentUser: {
+          ...currentUser,
+          points: typeof data.newPoints === 'number' ? data.newPoints : currentUser.points - giveaway.costPoints,
+        },
+        giveaways: giveaways.map((g) =>
+          g.id === id
+            ? { ...g, isEntered: true, participantsCount: data.participantsCount ?? g.participantsCount + 1 }
+            : g
+        ),
+      });
 
-    return { success: true, message: '¡Has entrado al sorteo con éxito! 🎉' };
+      return { success: true, message: data.message || 'Has entrado al sorteo con éxito' };
+    } catch (e) {
+      console.error('Error entering giveaway:', e);
+      return { success: false, message: 'Error de red al inscribirse' };
+    }
   },
 
   spinWheelWinners: () => {
-    return '¡Gira la ruleta!';
+    return 'Gira la ruleta';
   },
 
   // Encuestas
   polls: [
     {
       id: 'poll_1',
-      question: '🎙️ ¿Qué temática quieren para el próximo capítulo del Podcast?',
+      question: '¿Qué temática quieren para el próximo capítulo del Podcast?',
       description: 'Vota tu favorita. El tema ganador será debatido durante el próximo directo.',
       category: 'STREAM',
       featured: true,
@@ -255,15 +325,15 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       totalVotes: 0,
       userVotedOptionId: undefined,
       options: [
-        { id: 'opt_1', text: '🎮 Noche de anécdotas y confesiones prohibidas de streaming', votesCount: 0, percentage: 0 },
-        { id: 'opt_2', text: '🥊 Tier list en vivo: Creadores más polémicos de habla hispana', votesCount: 0, percentage: 0 },
-        { id: 'opt_3', text: '👻 Relatos paranormales y de terror enviados por la comunidad', votesCount: 0, percentage: 0 },
-        { id: 'opt_4', text: '💡 Invitado internacional en llamada Discord', votesCount: 0, percentage: 0 },
+        { id: 'opt_1', text: 'Noche de anécdotas y confesiones de streaming', votesCount: 0, percentage: 0 },
+        { id: 'opt_2', text: 'Tier list en vivo: Creadores de contenido polémicos', votesCount: 0, percentage: 0 },
+        { id: 'opt_3', text: 'Relatos paranormales y de terror de la comunidad', votesCount: 0, percentage: 0 },
+        { id: 'opt_4', text: 'Invitado internacional en llamada Discord', votesCount: 0, percentage: 0 },
       ],
     },
     {
       id: 'poll_2',
-      question: '🍕 ¿Qué ordenamos para comer durante el stream?',
+      question: '¿Qué ordenamos para comer durante el stream?',
       description: 'El stream se alimenta de lo que decida el chat en vivo.',
       category: 'COMUNIDAD',
       featured: false,
@@ -273,41 +343,46 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       options: [
         { id: 'p2_1', text: 'Pizzas artesanales con bordes rellenos', votesCount: 0, percentage: 0 },
         { id: 'p2_2', text: 'Hamburguesas smash dobles con papas', votesCount: 0, percentage: 0 },
-        { id: 'p2_3', text: 'Alitas picantes nivel suicidio (Reto en vivo)', votesCount: 0, percentage: 0 },
+        { id: 'p2_3', text: 'Alitas picantes (Reto en vivo)', votesCount: 0, percentage: 0 },
       ],
     },
   ],
 
-  votePoll: (pollId, optionId) => {
+  votePoll: async (pollId, optionId) => {
     const { polls, currentUser } = get();
+    const poll = polls.find((p) => p.id === pollId);
+    if (!poll || poll.userVotedOptionId) return;
 
-    // Persistir voto en SQLite real
-    fetch('/api/polls/vote', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pollId, optionId }),
-    }).catch(console.error);
-    set({
-      currentUser: { ...currentUser, points: currentUser.points + 10 }, // 10 pts por votar
-      polls: polls.map((p) => {
-        if (p.id !== pollId || p.userVotedOptionId) return p;
-        const newTotal = p.totalVotes + 1;
-        const updatedOptions = p.options.map((opt) => {
-          const newVotes = opt.id === optionId ? opt.votesCount + 1 : opt.votesCount;
+    try {
+      const res = await fetch('/api/polls/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pollId, optionId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        console.warn('Error submitting vote to server:', data.error);
+        return;
+      }
+
+      set({
+        currentUser: {
+          ...currentUser,
+          points: typeof data.newPoints === 'number' ? data.newPoints : currentUser.points + 10,
+        },
+        polls: polls.map((p) => {
+          if (p.id !== pollId) return p;
           return {
-            ...opt,
-            votesCount: newVotes,
-            percentage: Math.round((newVotes / newTotal) * 100),
+            ...p,
+            totalVotes: data.totalVotes ?? p.totalVotes + 1,
+            userVotedOptionId: optionId,
+            options: data.options ?? p.options,
           };
-        });
-        return {
-          ...p,
-          totalVotes: newTotal,
-          userVotedOptionId: optionId,
-          options: updatedOptions,
-        };
-      }),
-    });
+        }),
+      });
+    } catch (e) {
+      console.error('Error submitting vote:', e);
+    }
   },
 
   // Muro
@@ -403,7 +478,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   clips: [
     {
       id: 'clip_1',
-      title: '🎙️ Bienvenidos a Metele Nomás Podcast',
+      title: 'Bienvenidos a Metele Nomás Podcast',
       description: 'El podcast donde hablamos sin filtro de todo lo que pasa en el streaming y la cultura pop.',
       videoUrl: 'https://www.youtube.com/@metelenomas',
       thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80',
@@ -434,38 +509,38 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   shopItems: [
     {
       id: 'item_1',
-      name: '👑 Rol VIP en Comunidad & Discord',
+      name: 'Rol VIP en Comunidad & Discord',
       description: 'Color dorado exclusivo, acceso a sorteos VIP y multiplicador de puntos x1.5.',
       pricePoints: 1000,
       category: 'ROLE',
-      icon: '👑',
+      icon: 'VIP',
       stock: -1,
     },
     {
       id: 'item_2',
-      name: '📢 Saludo & Dedicatoria en Vivo en el Stream',
+      name: 'Saludo & Dedicatoria en Vivo en el Stream',
       description: 'Tu nombre y mensaje leídos al aire durante el directo con banner personalizado.',
       pricePoints: 1500,
       category: 'SHOUTOUT',
-      icon: '🎙️',
+      icon: 'LIVE',
       stock: 8,
     },
     {
       id: 'item_3',
-      name: '👕 Polera Oficial "Metele Nomás" Signature',
+      name: 'Polera Oficial "Metele Nomás" Signature',
       description: 'Algodón 100% premium con logo bordado en el pecho. Envío a todo el país.',
       pricePoints: 4000,
       category: 'MERCH',
-      icon: '👕',
+      icon: 'MERCH',
       stock: 4,
     },
     {
       id: 'item_4',
-      name: '⭐ Badge Especial: "Metedor Legendario"',
+      name: 'Badge Especial: Metedor Legendario',
       description: 'Insignia animada con fuego que brilla junto a tu nombre en comentarios y rankings.',
       pricePoints: 500,
       category: 'BADGE',
-      icon: '⭐',
+      icon: 'OG',
       stock: -1,
     },
   ],
@@ -499,7 +574,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   streamEvents: [
     {
       id: 'evt_1',
-      title: '🎙️ Metele Nomás Podcast — En Vivo con Chat & Votaciones',
+      title: 'Metele Nomás Podcast — En Vivo con Chat & Votaciones',
       description: 'Lunes, Miércoles y Viernes de 21:00 a 23:00 (Hora Bolivia). ¡El podcast más metedor!',
       gameTitle: 'Podcast & Charla en Vivo',
       scheduledAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
@@ -509,7 +584,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     },
     {
       id: 'evt_2',
-      title: '🎁 Noche de Ruleta & Sorteo Comunitario para Suscriptores',
+      title: 'Noche de Ruleta & Sorteo Comunitario para Suscriptores',
       description: 'Gira la ruleta en directo para ganar periféricos gamer y membresías.',
       gameTitle: 'Sorteos & Dinámicas en Vivo',
       scheduledAt: new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString(),
@@ -526,7 +601,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       code: 'FIRST_LOGIN',
       title: 'Primer Paso',
       description: 'Te uniste oficialmente a la familia de Metele Nomás.',
-      icon: '🎉',
+      icon: 'SPARKLES',
       pointsReward: 50,
       unlocked: true,
       unlockedAt: 'Hace 12 días',
@@ -536,7 +611,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       code: 'STREAK_7',
       title: 'Racha de Fuego',
       description: 'Mantuviste una racha de 7 días seguidos de ingreso.',
-      icon: '🔥',
+      icon: 'FLAME',
       pointsReward: 100,
       unlocked: true,
       unlockedAt: 'Hace 5 días',
@@ -546,7 +621,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       code: 'POLL_MASTER',
       title: 'Voz del Pueblo',
       description: 'Has participado en más de 5 votaciones comunitarias.',
-      icon: '🗳️',
+      icon: 'VOTE',
       pointsReward: 75,
       unlocked: true,
       unlockedAt: 'Ayer',
@@ -556,7 +631,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       code: 'LUCKY_ONE',
       title: 'Tocado por la Suerte',
       description: 'Gana cualquier sorteo de la plataforma.',
-      icon: '👑',
+      icon: 'TROPHY',
       pointsReward: 200,
       unlocked: false,
     },
@@ -565,7 +640,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       code: 'METEDOR_SUPREMO',
       title: 'Metedor Supremo',
       description: 'Alcanza el Nivel 5 de fidelidad.',
-      icon: '⚡',
+      icon: 'CROWN',
       pointsReward: 500,
       unlocked: false,
     },

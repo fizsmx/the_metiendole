@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { isSuperAdminEmail } from '@/lib/constants';
 
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Inicia sesión con Google para participar en este sorteo' }, { status: 401 });
     }
 
@@ -14,7 +15,45 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'giveawayId requerido' }, { status: 400 });
     }
 
-    const userId = session.user.id;
+    const sessionEmail = session.user.email?.toLowerCase().trim();
+    const sessionId = session.user.id;
+
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(sessionId ? [{ id: sessionId }] : []),
+          ...(sessionEmail ? [{ email: sessionEmail }] : []),
+        ],
+      },
+    });
+
+    if (!user && sessionEmail) {
+      const role = isSuperAdminEmail(sessionEmail) ? 'ADMIN' : 'MEMBER';
+      const rawName = session.user.name || sessionEmail.split('@')[0];
+      const nickname =
+        rawName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') ||
+        'metedor_' + Math.floor(Math.random() * 9000 + 1000);
+
+      user = await prisma.user.create({
+        data: {
+          email: sessionEmail,
+          name: rawName,
+          nickname,
+          image: session.user.image || '/images/brand/logo-circle.png',
+          role,
+          points: role === 'ADMIN' ? 9999 : 150,
+          level: 1,
+          streak: 1,
+          bio: 'Miembro oficial de la comunidad de Metele Nomás.',
+        },
+      });
+    }
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+    }
+
+    const userId = user.id;
 
     // Buscar el sorteo
     const giveaway = await prisma.giveaway.findUnique({
@@ -34,12 +73,6 @@ export async function POST(req: Request) {
     const alreadyEntered = giveaway.entries.some((e) => e.userId === userId);
     if (alreadyEntered) {
       return NextResponse.json({ error: 'Ya estás participando en este sorteo' }, { status: 400 });
-    }
-
-    // Buscar usuario y validar puntos y nivel
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
     if (user.points < giveaway.costPoints) {

@@ -5,7 +5,24 @@ import Image from 'next/image';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import { getLevel } from '@/lib/utils';
 import { useSession, signOut } from 'next-auth/react';
-import { X, Trophy, Flame, Star, Award, ShieldCheck, CheckCircle2, LogOut } from 'lucide-react';
+import { X, Trophy, Flame, Star, Award, ShieldCheck, CheckCircle2, LogOut, Sparkles, Vote, Crown } from 'lucide-react';
+
+function renderAchievementIcon(code: string) {
+  switch (code) {
+    case 'FIRST_LOGIN':
+      return <Sparkles className="w-6 h-6 text-pink-400" />;
+    case 'STREAK_7':
+      return <Flame className="w-6 h-6 text-amber-500" />;
+    case 'POLL_MASTER':
+      return <Vote className="w-6 h-6 text-blue-400" />;
+    case 'LUCKY_ONE':
+      return <Trophy className="w-6 h-6 text-amber-400" />;
+    case 'METEDOR_SUPREMO':
+      return <Crown className="w-6 h-6 text-yellow-300" />;
+    default:
+      return <Award className="w-6 h-6 text-[#F5A623]" />;
+  }
+}
 
 export default function ProfileModal() {
   const { isProfileOpen, setIsProfileOpen, currentUser, achievements } = useCommunityStore();
@@ -119,8 +136,8 @@ export default function ProfileModal() {
                       : 'bg-black/40 border-white/[0.03] opacity-40'
                   }`}
                 >
-                  <div className="text-2xl p-2 rounded-xl bg-black/60 border border-white/[0.08]">
-                    {ach.icon}
+                  <div className="p-2.5 rounded-xl bg-black/60 border border-white/[0.08] flex items-center justify-center shrink-0">
+                    {renderAchievementIcon(ach.code)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">

@@ -6,7 +6,19 @@ import { auth } from '@/auth';
 export async function GET() {
   try {
     const session = await auth();
-    const currentUserId = session?.user?.id;
+    let currentUserId = session?.user?.id;
+    if (session?.user?.email) {
+      const dbUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            ...(currentUserId ? [{ id: currentUserId }] : []),
+            { email: session.user.email.toLowerCase().trim() },
+          ],
+        },
+        select: { id: true },
+      });
+      if (dbUser) currentUserId = dbUser.id;
+    }
 
     // 1. Sorteos
     const dbGiveaways = await prisma.giveaway.findMany({

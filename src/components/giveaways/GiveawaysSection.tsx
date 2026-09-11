@@ -11,12 +11,12 @@ export default function GiveawaysSection() {
   const { giveaways, enterGiveaway, setIsWheelOpen, setIsAuthModalOpen } = useCommunityStore();
   const [toast, setToast] = useState<{ id: string; message: string; success: boolean } | null>(null);
 
-  const handleEnter = (id: string) => {
+  const handleEnter = async (id: string) => {
     if (!session) {
       setIsAuthModalOpen(true);
       return;
     }
-    const res = enterGiveaway(id);
+    const res = await enterGiveaway(id);
     setToast({ id, message: res.message, success: res.success });
     setTimeout(() => setToast(null), 4000);
   };
