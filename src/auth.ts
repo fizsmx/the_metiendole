@@ -4,8 +4,12 @@ import Credentials from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 
+const isPostgres = !!process.env.DATABASE_URL?.startsWith('postgres');
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  trustHost: true,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'metele-nomas-super-secret-key-2026-xyz123!',
+  adapter: isPostgres ? PrismaAdapter(prisma) : undefined,
   session: {
     strategy: 'jwt',
   },
@@ -25,68 +29,97 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const email = credentials?.email as string;
         if (!email) return null;
 
-        // Buscar usuario existente en la base de datos
-        let user = await prisma.user.findUnique({
-          where: { email },
-        });
-
-        // Si no existe, crearlo como nuevo miembro de la comunidad
-        if (!user) {
-          const rawName = (credentials?.name as string) || email.split('@')[0];
-          const nickname = rawName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'metedor_' + Math.floor(Math.random() * 9000 + 1000);
-          
-          user = await prisma.user.create({
-            data: {
-              email,
-              name: rawName,
-              nickname,
-              image: '/images/brand/logo-circle.png',
-              role: email.includes('host') || email.includes('admin') ? 'ADMIN' : 'MEMBER',
-              points: 150, // 100 base + 50 de bienvenida
-              level: 1,
-              streak: 1,
-              bio: 'Nuevo metedor oficial de la comunidad de Metele Nomás.',
-            },
+        try {
+          // Buscar usuario existente en la base de datos si está disponible
+          let user = await prisma.user.findUnique({
+            where: { email },
           });
-        }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          role: user.role,
-          points: user.points,
-          level: user.level,
-          streak: user.streak,
-          nickname: user.nickname || user.name || 'Metedor',
-        };
+          // Si no existe, crearlo como nuevo miembro de la comunidad
+          if (!user) {
+            const rawName = (credentials?.name as string) || email.split('@')[0];
+            const nickname = rawName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'metedor_' + Math.floor(Math.random() * 9000 + 1000);
+            
+            user = await prisma.user.create({
+              data: {
+                email,
+                name: rawName,
+                nickname,
+                image: '/images/brand/logo-circle.png',
+                role: email.includes('host') || email.includes('admin') || email.includes('fisbert') ? 'ADMIN' : 'MEMBER',
+                points: 150, // 100 base + 50 de bienvenida
+                level: 1,
+                streak: 1,
+                bio: 'Nuevo metedor oficial de la comunidad de Metele Nomás.',
+              },
+            });
+          }
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            image: user.image,
+            role: user.role,
+            points: user.points,
+            level: user.level,
+            streak: user.streak,
+            nickname: user.nickname || user.name || 'Metedor',
+          };
+        } catch (e) {
+          console.warn('DB error in authorize, using memory user fallback:', e);
+          const rawName = (credentials?.name as string) || email.split('@')[0];
+          return {
+            id: 'usr_' + Math.random().toString(36).slice(2, 8),
+            name: rawName,
+            email,
+            image: '/images/brand/logo-circle.png',
+            role: (email.includes('host') || email.includes('admin') || email.includes('fisbert')) ? 'ADMIN' : 'MEMBER',
+            points: 150,
+            level: 1,
+            streak: 1,
+            nickname: rawName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'metedor',
+          };
+        }
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id || token.sub || 'usr_' + Math.random().toString(36).slice(2, 8);
+        token.name = user.name;
+        token.email = user.email;
+        token.picture = user.image;
+        token.role = (user.email === 'fisbert.smx@gmail.com' || user.email === 'fisbertdarck@gmail.com' || user.email?.includes('host') || user.email?.includes('admin')) ? 'ADMIN' : 'MEMBER';
+        token.points = 150;
+        token.level = 1;
+        token.streak = 1;
+        token.nickname = user.name?.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'metedor';
       }
       
       if (token.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-        });
-        if (dbUser) {
-          token.role = dbUser.role;
-          token.points = dbUser.points;
-          token.level = dbUser.level;
-          token.streak = dbUser.streak;
-          token.nickname = dbUser.nickname || dbUser.name || 'Metedor';
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email as string },
+          });
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.points = dbUser.points;
+            token.level = dbUser.level;
+            token.streak = dbUser.streak;
+            token.nickname = dbUser.nickname || dbUser.name || token.nickname;
+          }
+        } catch (e) {
+          // Si la DB aún no está sincronizada o no es accesible, continuamos con los datos del token
+          console.warn('DB lookup skipped in jwt callback:', e);
         }
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string;
+        session.user.id = (token.id || token.sub) as string;
         session.user.role = (token.role as 'ADMIN' | 'MODERATOR' | 'VIP' | 'MEMBER') || 'MEMBER';
         session.user.points = typeof token.points === 'number' ? token.points : 150;
         session.user.level = typeof token.level === 'number' ? token.level : 1;
@@ -98,19 +131,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   events: {
     async createUser({ user }) {
-      // Configurar valores por defecto para usuarios registrados vía Google OAuth
-      if (user.id && user.name) {
-        const defaultNick = user.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'metedor_' + user.id.slice(-4);
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            nickname: defaultNick,
-            points: 150, // Bono de bienvenida
-            level: 1,
-            streak: 1,
-            role: user.email === 'host@metelenomas.com' ? 'ADMIN' : 'MEMBER',
-          },
-        });
+      try {
+        if (user.id && user.name) {
+          const defaultNick = user.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'metedor_' + user.id.slice(-4);
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              nickname: defaultNick,
+              points: 150, // Bono de bienvenida
+              level: 1,
+              streak: 1,
+              role: (user.email === 'fisbert.smx@gmail.com' || user.email === 'fisbertdarck@gmail.com' || user.email?.includes('host')) ? 'ADMIN' : 'MEMBER',
+            },
+          });
+        }
+      } catch (e) {
+        console.warn('Could not update user in createUser event:', e);
       }
     },
   },
