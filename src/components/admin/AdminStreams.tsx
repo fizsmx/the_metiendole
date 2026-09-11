@@ -10,7 +10,7 @@ export default function AdminStreams() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [gameTitle, setGameTitle] = useState('Podcast & Debate');
-  const [youtubeUrl, setYoutubeUrl] = useState('https://youtube.com');
+  const [youtubeUrl, setYoutubeUrl] = useState('https://www.youtube.com/@MeteleNomas');
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();

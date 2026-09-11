@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
+import { useSession } from 'next-auth/react';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import { Vote, BarChart3 } from 'lucide-react';
 
 export default function PollsSection() {
-  const { polls, votePoll } = useCommunityStore();
+  const { data: session } = useSession();
+  const { polls, votePoll, setIsAuthModalOpen } = useCommunityStore();
 
   return (
     <section className="py-12">
@@ -56,7 +58,13 @@ export default function PollsSection() {
                   return (
                     <button
                       key={option.id}
-                      onClick={() => !hasVoted && votePoll(poll.id, option.id)}
+                      onClick={() => {
+                        if (!session) {
+                          setIsAuthModalOpen(true);
+                          return;
+                        }
+                        if (!hasVoted) votePoll(poll.id, option.id);
+                      }}
                       disabled={hasVoted}
                       className={`w-full relative overflow-hidden text-left p-4 rounded-2xl border transition-all duration-300 ${
                         isSelected

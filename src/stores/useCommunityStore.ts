@@ -22,6 +22,10 @@ interface CommunityState {
   setIsWhatsAppQROpen: (open: boolean) => void;
   isWheelOpen: boolean;
   setIsWheelOpen: (open: boolean) => void;
+  isAuthModalOpen: boolean;
+  setIsAuthModalOpen: (open: boolean) => void;
+  syncFromDatabase: () => Promise<void>;
+  setCurrentUser: (user: Partial<UserProfile>) => void;
 
   // Current User
   currentUser: UserProfile;
@@ -105,6 +109,31 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   setIsWhatsAppQROpen: (open) => set({ isWhatsAppQROpen: open }),
   isWheelOpen: false,
   setIsWheelOpen: (open) => set({ isWheelOpen: open }),
+  isAuthModalOpen: false,
+  setIsAuthModalOpen: (open) => set({ isAuthModalOpen: open }),
+
+  setCurrentUser: (partialUser) => {
+    const { currentUser } = get();
+    set({ currentUser: { ...currentUser, ...partialUser } });
+  },
+
+  syncFromDatabase: async () => {
+    try {
+      const res = await fetch('/api/community/sync');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success) {
+        set({
+          giveaways: data.giveaways.length > 0 ? data.giveaways : get().giveaways,
+          polls: data.polls.length > 0 ? data.polls : get().polls,
+          leaderboard: data.leaderboard.length > 0 ? data.leaderboard : get().leaderboard,
+          posts: data.posts.length > 0 ? data.posts : get().posts,
+        });
+      }
+    } catch (e) {
+      console.error('Error syncing store from database:', e);
+    }
+  },
 
   // Usuario simulado conectado (listo para conectar con Google OAuth en producción)
   currentUser: {
@@ -189,6 +218,13 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       return { success: false, message: `Requiere Nivel ${giveaway.minLevel}` };
     }
 
+    // Persistir inscripción en SQLite real
+    fetch('/api/giveaways/enter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ giveawayId: id }),
+    }).catch(console.error);
+
     set({
       currentUser: {
         ...currentUser,
@@ -256,6 +292,13 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
 
   votePoll: (pollId, optionId) => {
     const { polls, currentUser } = get();
+
+    // Persistir voto en SQLite real
+    fetch('/api/polls/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pollId, optionId }),
+    }).catch(console.error);
     set({
       currentUser: { ...currentUser, points: currentUser.points + 10 }, // 10 pts por votar
       polls: polls.map((p) => {
@@ -530,22 +573,22 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   streamEvents: [
     {
       id: 'evt_1',
-      title: '🎙️ Metele Nomás Podcast #48 — Debate Caliente + Sorteo de Cascos',
-      description: 'Transmisión especial en vivo por YouTube. Votaremos los temas con el chat.',
+      title: '🎙️ Metele Nomás Podcast — En Vivo con Chat & Votaciones',
+      description: 'Lunes, Miércoles y Viernes de 21:00 a 23:00 (Hora Bolivia). ¡El podcast más metedor!',
       gameTitle: 'Podcast & Charla en Vivo',
-      scheduledAt: new Date(Date.now() + 2 * 24 * 3600 * 1000).toISOString(),
-      durationMin: 180,
-      youtubeUrl: 'https://youtube.com',
+      scheduledAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      durationMin: 120,
+      youtubeUrl: 'https://www.youtube.com/@MeteleNomas',
       isLive: false,
     },
     {
       id: 'evt_2',
-      title: '🎮 Domingo de Torneo Comunitario & Ruleta de Puntos',
-      description: 'Partidas con los suscriptores y giros de la ruleta cada 30 minutos.',
-      gameTitle: 'Gaming & Comunidad',
-      scheduledAt: new Date(Date.now() + 4 * 24 * 3600 * 1000).toISOString(),
-      durationMin: 210,
-      youtubeUrl: 'https://youtube.com',
+      title: '🎁 Noche de Ruleta & Sorteo Comunitario para Suscriptores',
+      description: 'Gira la ruleta en directo para ganar periféricos gamer y membresías.',
+      gameTitle: 'Sorteos & Dinámicas en Vivo',
+      scheduledAt: new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString(),
+      durationMin: 120,
+      youtubeUrl: 'https://www.youtube.com/@MeteleNomas',
       isLive: false,
     },
   ],

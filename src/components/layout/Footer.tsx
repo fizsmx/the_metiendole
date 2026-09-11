@@ -37,7 +37,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://youtube.com"
+                href="https://www.youtube.com/@MeteleNomas"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-600/10 text-red-400 border border-red-500/20 hover:bg-red-600/20 text-xs font-bold transition-all"

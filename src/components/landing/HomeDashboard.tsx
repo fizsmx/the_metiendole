@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import HeroSection from '@/components/landing/HeroSection';
+import { useSession } from 'next-auth/react';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import {
   Gift,
@@ -23,6 +24,7 @@ import {
 import { YoutubeIcon } from '@/components/ui/Icons';
 
 export default function HomeDashboard() {
+  const { data: session } = useSession();
   const {
     giveaways,
     enterGiveaway,
@@ -34,6 +36,7 @@ export default function HomeDashboard() {
     posts,
     setActiveTab,
     setIsWhatsAppQROpen,
+    setIsAuthModalOpen,
   } = useCommunityStore();
 
   const nextStream = streamEvents[0];
@@ -125,7 +128,13 @@ export default function HomeDashboard() {
                     </div>
 
                     <button
-                      onClick={() => enterGiveaway(gw.id)}
+                      onClick={() => {
+                        if (!session) {
+                          setIsAuthModalOpen(true);
+                          return;
+                        }
+                        enterGiveaway(gw.id);
+                      }}
                       disabled={gw.isEntered}
                       className={`w-full py-2 px-3 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
                         gw.isEntered
@@ -190,7 +199,13 @@ export default function HomeDashboard() {
                     return (
                       <button
                         key={option.id}
-                        onClick={() => !hasVoted && votePoll(featuredPoll.id, option.id)}
+                        onClick={() => {
+                          if (!session) {
+                            setIsAuthModalOpen(true);
+                            return;
+                          }
+                          if (!hasVoted) votePoll(featuredPoll.id, option.id);
+                        }}
                         disabled={hasVoted}
                         className={`w-full relative overflow-hidden text-left p-3 rounded-xl border transition-all duration-300 ${
                           isSelected
@@ -244,9 +259,9 @@ export default function HomeDashboard() {
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 flex items-center gap-1.5">
                   <Radio className="w-3 h-3 animate-pulse" />
-                  <span>DIRECTO PRONTO</span>
+                  <span>DIRECTO EN YOUTUBE</span>
                 </span>
-                <span className="text-xs text-zinc-400 font-bold">Viernes 20:00</span>
+                <span className="text-xs text-zinc-300 font-bold">21:00 a 23:00 (BO)</span>
               </div>
 
               <div>

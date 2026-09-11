@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import {
   Flame,
@@ -20,23 +21,50 @@ import {
   Radio,
   ShieldCheck,
   ChevronDown,
+  User,
 } from 'lucide-react';
 
 export default function Navbar() {
+  const { data: session, status } = useSession();
   const {
     activeTab,
     setActiveTab,
     currentUser,
+    setCurrentUser,
+    syncFromDatabase,
     dailyClaimed,
     claimDailyReward,
     setIsProfileOpen,
     setIsWhatsAppQROpen,
+    setIsAuthModalOpen,
   } = useCommunityStore();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [claimToast, setClaimToast] = useState<string | null>(null);
   const moreRef = useRef<HTMLDivElement>(null);
+
+  // Synchronize store data from database on mount
+  useEffect(() => {
+    syncFromDatabase();
+  }, [syncFromDatabase]);
+
+  // Synchronize authenticated session user into community store
+  useEffect(() => {
+    if (session?.user) {
+      setCurrentUser({
+        id: session.user.id,
+        name: session.user.name || 'Metedor',
+        nickname: session.user.nickname || session.user.name || 'Metedor',
+        email: session.user.email || '',
+        image: session.user.image || '/images/brand/logo-circle.png',
+        role: (session.user.role as 'ADMIN' | 'MODERATOR' | 'VIP' | 'MEMBER') || 'MEMBER',
+        points: session.user.points ?? 150,
+        level: session.user.level ?? 1,
+        streak: session.user.streak ?? 1,
+      });
+    }
+  }, [session, setCurrentUser]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -77,6 +105,10 @@ export default function Navbar() {
   const allNavItems = [...primaryNavItems, ...secondaryNavItems];
 
   const handleClaim = () => {
+    if (status !== 'authenticated') {
+      setIsAuthModalOpen(true);
+      return;
+    }
     const res = claimDailyReward();
     if (res.success) {
       setClaimToast(`+${res.points} Pts!`);
@@ -85,6 +117,7 @@ export default function Navbar() {
   };
 
   const isSecondaryActive = secondaryNavItems.some((item) => item.id === activeTab);
+  const isAuthenticated = status === 'authenticated';
 
   return (
     <>
@@ -119,7 +152,7 @@ export default function Navbar() {
                   </span>
                 </div>
                 <p className="text-[10px] text-zinc-400 font-medium tracking-wide hidden 2xl:block">
-                  Comunidad Oficial • Podcast & Stream
+                  Comunidad Oficial • @MeteleNomas
                 </p>
               </div>
             </button>
@@ -208,19 +241,19 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={handleClaim}
-                  disabled={dailyClaimed}
+                  disabled={isAuthenticated && dailyClaimed}
                   className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-300 ${
-                    dailyClaimed
+                    isAuthenticated && dailyClaimed
                       ? 'bg-zinc-800/80 text-zinc-500 border border-zinc-700/40 cursor-default'
                       : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/20 hover:scale-105 animate-bounce'
                   }`}
                 >
-                  <Flame className={`w-3.5 h-3.5 ${dailyClaimed ? 'text-zinc-500' : 'text-yellow-200 fill-yellow-200'}`} />
+                  <Flame className={`w-3.5 h-3.5 ${isAuthenticated && dailyClaimed ? 'text-zinc-500' : 'text-yellow-200 fill-yellow-200'}`} />
                   <span className="hidden md:inline">
-                    {dailyClaimed ? `Racha: ${currentUser.streak}d` : 'Reclamar'}
+                    {isAuthenticated && dailyClaimed ? `Racha: ${currentUser.streak}d` : 'Reclamar'}
                   </span>
                   <span className="md:hidden">
-                    {dailyClaimed ? `${currentUser.streak}d` : '+Pts'}
+                    {isAuthenticated && dailyClaimed ? `${currentUser.streak}d` : '+Pts'}
                   </span>
                 </button>
                 {claimToast && (
@@ -231,7 +264,7 @@ export default function Navbar() {
               </div>
 
               {/* Admin Panel Link */}
-              {currentUser.role === 'ADMIN' && (
+              {isAuthenticated && currentUser.role === 'ADMIN' && (
                 <Link
                   href="/admin"
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:scale-105 transition-all shadow-sm"
@@ -242,34 +275,44 @@ export default function Navbar() {
                 </Link>
               )}
 
-              {/* User Profile Pill */}
-              <button
-                onClick={() => setIsProfileOpen(true)}
-                className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-[#E91E8C]/50 hover:bg-white/[0.08] transition-all group"
-              >
-                <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-[#E91E8C]/40 shrink-0">
-                  <Image
-                    src={currentUser.image}
-                    alt={currentUser.name}
-                    width={28}
-                    height={28}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-                <div className="text-left hidden md:block">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs font-bold text-white group-hover:text-[#F5A623] transition-colors">
-                      {currentUser.nickname}
-                    </span>
-                    <span className="text-[9px] font-black px-1 rounded bg-gradient-to-r from-[#E91E8C] to-[#F5A623] text-white leading-tight">
-                      Nv.{currentUser.level}
-                    </span>
+              {/* Authenticated User Profile Pill */}
+              {isAuthenticated ? (
+                <button
+                  onClick={() => setIsProfileOpen(true)}
+                  className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-[#E91E8C]/50 hover:bg-white/[0.08] transition-all group"
+                >
+                  <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-[#E91E8C]/40 shrink-0">
+                    <Image
+                      src={currentUser.image}
+                      alt={currentUser.name}
+                      width={28}
+                      height={28}
+                      className="object-cover w-full h-full"
+                    />
                   </div>
-                  <div className="text-[10px] font-semibold text-amber-400 leading-none">
-                    ★ {currentUser.points.toLocaleString()} pts
+                  <div className="text-left hidden md:block">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs font-bold text-white group-hover:text-[#F5A623] transition-colors">
+                        {currentUser.nickname}
+                      </span>
+                      <span className="text-[9px] font-black px-1 rounded bg-gradient-to-r from-[#E91E8C] to-[#F5A623] text-white leading-tight">
+                        Nv.{currentUser.level}
+                      </span>
+                    </div>
+                    <div className="text-[10px] font-semibold text-amber-400 leading-none">
+                      ★ {currentUser.points.toLocaleString()} pts
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-[#E91E8C] to-[#F5A623] hover:scale-105 shadow-md shadow-[#E91E8C]/25 transition-all"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>Entrar con Google</span>
+                </button>
+              )}
 
               {/* Mobile Hamburger Button */}
               <button
@@ -311,7 +354,7 @@ export default function Navbar() {
             </div>
 
             <div className="pt-2 border-t border-white/[0.08] grid grid-cols-2 gap-2">
-              {currentUser.role === 'ADMIN' && (
+              {isAuthenticated && currentUser.role === 'ADMIN' && (
                 <Link
                   href="/admin"
                   onClick={() => setMobileMenuOpen(false)}
@@ -331,15 +374,29 @@ export default function Navbar() {
                 <QrCode className="w-4 h-4" />
                 <span>WhatsApp QR</span>
               </button>
-              <button
-                onClick={() => {
-                  setIsProfileOpen(true);
-                  setMobileMenuOpen(false);
-                }}
-                className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold text-zinc-200 bg-white/[0.05] border border-white/[0.08]"
-              >
-                <span>Mi Perfil ({currentUser.points} pts)</span>
-              </button>
+
+              {isAuthenticated ? (
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold text-zinc-200 bg-white/[0.05] border border-white/[0.08]"
+                >
+                  <span>Mi Perfil ({currentUser.points} pts)</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsAuthModalOpen(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-black text-white bg-gradient-to-r from-[#E91E8C] to-[#F5A623]"
+                >
+                  <User className="w-4 h-4" />
+                  <span>Iniciar Sesión</span>
+                </button>
+              )}
             </div>
           </div>
         )}

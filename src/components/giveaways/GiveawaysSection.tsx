@@ -2,14 +2,20 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import { Gift, Sparkles, Clock, Users, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function GiveawaysSection() {
-  const { giveaways, enterGiveaway, setIsWheelOpen } = useCommunityStore();
+  const { data: session } = useSession();
+  const { giveaways, enterGiveaway, setIsWheelOpen, setIsAuthModalOpen } = useCommunityStore();
   const [toast, setToast] = useState<{ id: string; message: string; success: boolean } | null>(null);
 
   const handleEnter = (id: string) => {
+    if (!session) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     const res = enterGiveaway(id);
     setToast({ id, message: res.message, success: res.success });
     setTimeout(() => setToast(null), 4000);

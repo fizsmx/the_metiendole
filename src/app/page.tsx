@@ -14,6 +14,7 @@ import CalendarSection from '@/components/calendar/CalendarSection';
 import ProfileModal from '@/components/profile/ProfileModal';
 import WhatsAppQRModal from '@/components/whatsapp/WhatsAppQRModal';
 import GiveawayWheelModal from '@/components/giveaways/GiveawayWheelModal';
+import AuthModal from '@/components/auth/AuthModal';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 
 export default function HomePage() {
@@ -40,6 +41,7 @@ export default function HomePage() {
       <ProfileModal />
       <WhatsAppQRModal />
       <GiveawayWheelModal />
+      <AuthModal />
 
       {/* Footer */}
       <Footer />

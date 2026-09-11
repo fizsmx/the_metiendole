@@ -4,10 +4,12 @@ import React from 'react';
 import Image from 'next/image';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import { getLevel } from '@/lib/utils';
-import { X, Trophy, Flame, Star, Award, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
+import { X, Trophy, Flame, Star, Award, ShieldCheck, CheckCircle2, LogOut } from 'lucide-react';
 
 export default function ProfileModal() {
   const { isProfileOpen, setIsProfileOpen, currentUser, achievements } = useCommunityStore();
+  const { data: session } = useSession();
 
   if (!isProfileOpen) return null;
 
@@ -136,6 +138,22 @@ export default function ProfileModal() {
               ))}
             </div>
           </div>
+
+          {/* Sign Out Button */}
+          {session && (
+            <div className="mt-6 pt-4 border-t border-white/[0.08]">
+              <button
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  signOut({ callbackUrl: '/' });
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs text-red-400 bg-red-500/10 border border-red-500/25 hover:bg-red-500/20 transition-all"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Cerrar Sesión</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

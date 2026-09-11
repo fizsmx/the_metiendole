@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
+import AuthProvider from '@/components/providers/AuthProvider';
 import './globals.css';
 
 const inter = Inter({
@@ -35,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${inter.variable} ${spaceGrotesk.variable} dark`}>
       <body className="min-h-screen bg-[#0a0a0f] text-[#f0f0f5] font-sans antialiased selection:bg-[#E91E8C] selection:text-white flex flex-col pb-16 xl:pb-0">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import { X, MessageCircle, CheckCircle, ExternalLink } from 'lucide-react';
 
@@ -35,46 +36,20 @@ export default function WhatsAppQRModal() {
           Entérate primero que nadie cuando estemos en vivo, participa en dinámicas secretas y habla directo con Fisbert.
         </p>
 
-        {/* QR Code Container */}
-        <div className="my-6 p-4 bg-white rounded-2xl inline-block shadow-2xl relative group">
-          <div className="w-48 h-48 relative flex items-center justify-center bg-zinc-50 border-4 border-emerald-500/20 rounded-xl overflow-hidden">
-            {/* Real aesthetic QR SVG */}
-            <svg
-              viewBox="0 0 100 100"
-              className="w-full h-full p-2 text-zinc-900 fill-current"
-            >
-              {/* Corner markers */}
-              <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="4" />
-              <rect x="11" y="11" width="13" height="13" />
-              <rect x="70" y="5" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="4" />
-              <rect x="76" y="11" width="13" height="13" />
-              <rect x="5" y="70" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="4" />
-              <rect x="11" y="76" width="13" height="13" />
-              
-              {/* Data pattern */}
-              <rect x="35" y="8" width="5" height="5" />
-              <rect x="45" y="8" width="8" height="5" />
-              <rect x="58" y="8" width="5" height="5" />
-              <rect x="35" y="18" width="12" height="5" />
-              <rect x="52" y="18" width="10" height="5" />
-              <rect x="35" y="28" width="7" height="6" />
-              <rect x="47" y="28" width="15" height="6" />
-
-              <rect x="8" y="35" width="5" height="12" />
-              <rect x="18" y="35" width="7" height="7" />
-              <rect x="75" y="35" width="8" height="8" />
-              <rect x="87" y="35" width="6" height="14" />
-
-              {/* Center Icon */}
-              <circle cx="50" cy="50" r="14" fill="#0a0a0f" />
-              <circle cx="50" cy="50" r="11" fill="#10b981" />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-white text-xs font-black">MN</span>
-            </div>
+        {/* Real QR Code Container */}
+        <div className="my-5 p-4 bg-white rounded-2xl inline-block shadow-[0_0_30px_rgba(16,185,129,0.25)] relative group">
+          <div className="w-56 h-56 sm:w-64 sm:h-64 relative flex items-center justify-center bg-white rounded-xl overflow-hidden p-2">
+            <Image
+              src="/images/brand/whatsapp-qr.jpeg"
+              alt="Código QR Comunidad WhatsApp Metele Nomás"
+              width={256}
+              height={256}
+              className="object-contain w-full h-full rounded-lg group-hover:scale-105 transition-transform duration-300"
+              priority
+            />
           </div>
-          <p className="text-[11px] font-bold text-zinc-600 mt-2">
-            Apunta con la cámara de tu celular
+          <p className="text-[11px] font-black text-zinc-700 mt-2 flex items-center justify-center gap-1.5">
+            <span>📷 Escanea con WhatsApp en tu celular</span>
           </p>
         </div>
 

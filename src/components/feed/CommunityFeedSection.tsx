@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import {
   MessageSquare,
@@ -11,7 +12,8 @@ import {
 } from 'lucide-react';
 
 export default function CommunityFeedSection() {
-  const { posts, createPost, addComment, toggleReaction } = useCommunityStore();
+  const { data: session } = useSession();
+  const { posts, createPost, addComment, toggleReaction, setIsAuthModalOpen } = useCommunityStore();
   const [newPostContent, setNewPostContent] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'GENERAL' | 'MEMES' | 'CLIPS' | 'DEBATE'>('GENERAL');
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
@@ -19,12 +21,20 @@ export default function CommunityFeedSection() {
 
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!session) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     if (!newPostContent.trim()) return;
     createPost(newPostContent, selectedCategory);
     setNewPostContent('');
   };
 
   const handleAddComment = (postId: string) => {
+    if (!session) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     if (!commentText.trim()) return;
     addComment(postId, commentText);
     setCommentText('');

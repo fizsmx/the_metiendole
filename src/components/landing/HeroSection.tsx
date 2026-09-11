@@ -30,7 +30,7 @@ export default function HeroSection() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
             </span>
             <span className="text-xs font-bold text-white">
-              Próximo Stream: Viernes 20:00 • ¡Debate en Vivo & Ruleta!
+              Directo: Lunes, Miércoles y Viernes 21:00 a 23:00 (Hora Bolivia) • ¡En Vivo en YouTube!
             </span>
           </div>
 
@@ -50,7 +50,7 @@ export default function HeroSection() {
             <div className="lg:col-span-7 space-y-4 text-center lg:text-left">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-[#E91E8C]/15 to-[#F5A623]/15 border border-[#E91E8C]/30 text-[#F5A623] text-[11px] font-black uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5 text-[#E91E8C]" />
-                La Comunidad Más Fiel de YouTube
+                Comunidad Oficial • @MeteleNomas
               </div>
 
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
@@ -61,7 +61,7 @@ export default function HeroSection() {
               </h1>
 
               <p className="text-xs sm:text-sm text-zinc-300 max-w-lg mx-auto lg:mx-0 leading-relaxed font-normal">
-                Tu punto de encuentro oficial. Vota en vivo los temas de cada episodio del podcast, acumula puntos con tu racha de directos y participa por auriculares gamer, merch oficial y experiencias VIP.
+                El podcast y stream más metedor de Bolivia. Vota en vivo los temas de cada episodio, acumula puntos con tu racha de directos y participa por auriculares gamer, merch oficial y premios en la ruleta en directo.
               </p>
 
               {/* Action Buttons */}
@@ -95,8 +95,8 @@ export default function HeroSection() {
               <div className="flex items-center justify-center lg:justify-start gap-6 pt-2 border-t border-white/[0.06] text-xs">
                 <div className="flex items-center gap-1.5">
                   <Users className="w-4 h-4 text-[#E91E8C]" />
-                  <span className="font-black text-white">1.4K+</span>
-                  <span className="text-zinc-400">Metedores</span>
+                  <span className="font-black text-white">7.39K+</span>
+                  <span className="text-zinc-400">Suscriptores</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Gift className="w-4 h-4 text-[#F5A623]" />

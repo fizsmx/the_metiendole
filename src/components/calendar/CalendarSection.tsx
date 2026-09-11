@@ -19,7 +19,7 @@ export default function CalendarSection() {
             Próximas Transmisiones en Vivo
           </h2>
           <p className="text-sm text-zinc-400 mt-1">
-            Activa las notificaciones en YouTube para no perderte el debate semanal.
+            En vivo todos los Lunes, Miércoles y Viernes de 21:00 a 23:00 (Hora Bolivia). ¡Activa la campanita en YouTube!
           </p>
         </div>
 
