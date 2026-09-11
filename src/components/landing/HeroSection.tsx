@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 
 export default function HeroSection() {
-  const { setActiveTab, setIsWhatsAppQROpen, setIsWheelOpen, giveaways } = useCommunityStore();
+  const { setActiveTab, setIsWhatsAppQROpen, setIsWheelOpen, giveaways, polls } = useCommunityStore();
+  const totalPollVotes = polls.reduce((acc, p) => acc + p.totalVotes, 0);
 
   return (
     <div className="relative overflow-hidden py-3 sm:py-5">
@@ -105,7 +106,7 @@ export default function HeroSection() {
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5">
                   <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
-                  <span className="font-black text-white text-xs sm:text-sm">840+</span>
+                  <span className="font-black text-white text-xs sm:text-sm">{totalPollVotes}</span>
                   <span className="text-[10px] sm:text-xs text-zinc-400">Votos</span>
                 </div>
               </div>

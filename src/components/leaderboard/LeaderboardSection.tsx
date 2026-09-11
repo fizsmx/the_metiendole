@@ -27,7 +27,13 @@ export default function LeaderboardSection() {
         </div>
 
         {/* Top 3 Podium */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12 items-end">
+        <div className={`gap-6 max-w-4xl mx-auto mb-12 items-end ${
+          top3.length === 1
+            ? 'flex justify-center'
+            : top3.length === 2
+            ? 'grid grid-cols-1 md:grid-cols-2'
+            : 'grid grid-cols-1 md:grid-cols-3'
+        }`}>
           {/* Rank 2 - Silver */}
           {top3[1] && (
             <div className="bg-[#12121c] border border-zinc-400/30 rounded-3xl p-6 text-center shadow-xl order-2 md:order-1 relative">
@@ -47,7 +53,7 @@ export default function LeaderboardSection() {
 
           {/* Rank 1 - Gold (Center) */}
           {top3[0] && (
-            <div className="bg-gradient-to-b from-[#1c1810] to-[#12121c] border-2 border-amber-400/60 rounded-3xl p-8 text-center shadow-[0_0_50px_rgba(245,166,35,0.2)] order-1 md:order-2 relative scale-105">
+            <div className="bg-gradient-to-b from-[#1c1810] to-[#12121c] border-2 border-amber-400/60 rounded-3xl p-8 text-center shadow-[0_0_50px_rgba(245,166,35,0.2)] order-1 md:order-2 relative scale-105 w-full max-w-sm">
               <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-zinc-950 font-black text-xs flex items-center gap-1.5 shadow-xl">
                 <Crown className="w-4 h-4 fill-zinc-950" /> #1 CAMPEÓN
               </div>
@@ -81,39 +87,47 @@ export default function LeaderboardSection() {
         </div>
 
         {/* Remaining Users Table */}
-        <div className="max-w-4xl mx-auto bg-[#101018] border border-white/[0.08] rounded-3xl overflow-hidden shadow-xl">
-          <div className="divide-y divide-white/[0.06]">
-            {rest.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors"
-              >
-                <div className="flex items-center gap-3.5">
-                  <span className="w-6 text-center font-black text-sm text-zinc-500">
-                    #{user.rank}
-                  </span>
-                  <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-white/[0.1]">
-                    <Image src={user.image} alt={user.name} fill sizes="40px" className="object-cover" />
+        {rest.length > 0 ? (
+          <div className="max-w-4xl mx-auto bg-[#101018] border border-white/[0.08] rounded-3xl overflow-hidden shadow-xl">
+            <div className="divide-y divide-white/[0.06]">
+              {rest.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <span className="w-6 text-center font-black text-sm text-zinc-500">
+                      #{user.rank}
+                    </span>
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-white/[0.1]">
+                      <Image src={user.image} alt={user.name} fill sizes="40px" className="object-cover" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white">{user.name}</h4>
+                      <p className="text-xs text-zinc-500">@{user.nickname}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-white">{user.name}</h4>
-                    <p className="text-xs text-zinc-500">@{user.nickname}</p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="hidden sm:flex items-center gap-1 text-xs text-orange-400 font-bold">
-                    <Flame className="w-3.5 h-3.5 fill-orange-400" />
-                    <span>{user.streak}d racha</span>
+                  <div className="flex items-center gap-4">
+                    <div className="hidden sm:flex items-center gap-1 text-xs text-orange-400 font-bold">
+                      <Flame className="w-3.5 h-3.5 fill-orange-400" />
+                      <span>{user.streak}d racha</span>
+                    </div>
+                    <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-white/[0.04] text-amber-400">
+                      {user.points.toLocaleString()} pts
+                    </span>
                   </div>
-                  <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-white/[0.04] text-amber-400">
-                    {user.points.toLocaleString()} pts
-                  </span>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="max-w-md mx-auto text-center py-6 px-4 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+            <p className="text-xs text-zinc-400 font-medium">
+              🔥 ¡La Temporada 1 del Ranking acaba de comenzar! Vota en las encuestas, comenta en el muro y reclama tu racha diaria para aparecer en el podio.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

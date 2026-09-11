@@ -98,7 +98,12 @@ export default function GiveawaysSection() {
                   <div className="flex items-center justify-between text-xs text-zinc-400 bg-white/[0.03] p-3 rounded-xl border border-white/[0.06]">
                     <div className="flex items-center gap-1.5 font-semibold text-zinc-300">
                       <Clock className="w-4 h-4 text-amber-400" />
-                      <span>Termina en 3 días</span>
+                      <span>
+                        {(() => {
+                          const diff = Math.ceil((new Date(giveaway.endsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                          return diff > 0 ? `Termina en ${diff} días` : 'Sorteo en directo';
+                        })()}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5 font-semibold text-zinc-300">
                       <Users className="w-4 h-4 text-[#E91E8C]" />

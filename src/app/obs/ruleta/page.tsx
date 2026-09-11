@@ -8,17 +8,14 @@ export default function OBSRuletaPage() {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [winner, setWinner] = useState<string | null>(null);
+  const [namesInput, setNamesInput] = useState('Chat en Vivo, Metedores, Metele Nomás, YouTube Live');
+  const [showConfig, setShowConfig] = useState(false);
 
-  const participants = [
-    'NicoElMetedor',
-    'CamiStream',
-    'Lucas_OP',
-    'Andres_Gaming',
-    'Sofi_Poderosa',
-    'Metedor_OG',
-    'Pablo_Bolivia',
-    'Gabi_Podcast',
-  ];
+  const parsedNames = namesInput
+    .split(',')
+    .map((n) => n.trim())
+    .filter(Boolean);
+  const participants = parsedNames.length > 0 ? parsedNames : ['Comunidad', 'Metele Nomás'];
 
   const colors = [
     '#E91E8C',
@@ -165,6 +162,32 @@ export default function OBSRuletaPage() {
           <RefreshCw className={`w-5 h-5 ${spinning ? 'animate-spin' : ''}`} />
           <span>{spinning ? 'Girando en Directo...' : '¡Girar Ruleta en Vivo!'}</span>
         </button>
+
+        {/* Toggle participant names for OBS */}
+        <div className="mt-4 pt-3 border-t border-white/[0.08]">
+          <button
+            type="button"
+            onClick={() => setShowConfig(!showConfig)}
+            className="text-xs font-bold text-zinc-400 hover:text-white transition-colors"
+          >
+            {showConfig ? '▲ Ocultar lista de participantes' : '⚙️ Configurar participantes del chat en vivo'}
+          </button>
+
+          {showConfig && (
+            <div className="mt-3 text-left space-y-1.5">
+              <label className="text-[11px] font-bold text-zinc-400">
+                Participantes (separados por comas):
+              </label>
+              <textarea
+                value={namesInput}
+                onChange={(e) => setNamesInput(e.target.value)}
+                rows={2}
+                className="w-full bg-black/50 border border-white/[0.1] rounded-xl p-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-400 resize-none"
+                placeholder="Chat, Metedor1, Metedor2..."
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

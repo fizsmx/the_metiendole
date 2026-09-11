@@ -11,6 +11,40 @@ import {
   MessageCircle,
 } from 'lucide-react';
 
+function formatPostDate(dateStr: string): string {
+  if (!dateStr) return '';
+  if (
+    dateStr.toLowerCase().includes('publicación') ||
+    dateStr.toLowerCase().includes('hace') ||
+    dateStr.toLowerCase().includes('justo')
+  ) {
+    return dateStr;
+  }
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMin < 2) return 'Justo ahora';
+    if (diffMin < 60) return `Hace ${diffMin} min`;
+    if (diffHours < 24) return `Hace ${diffHours} h`;
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+
+    return date.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'short',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function CommunityFeedSection() {
   const { data: session } = useSession();
   const { posts, createPost, addComment, toggleReaction, setIsAuthModalOpen } = useCommunityStore();
@@ -126,7 +160,7 @@ export default function CommunityFeedSection() {
                         {post.userRole}
                       </span>
                     </div>
-                    <span className="text-xs text-zinc-500">@{post.userNickname} • {post.createdAt}</span>
+                    <span className="text-xs text-zinc-500">@{post.userNickname} • {formatPostDate(post.createdAt)}</span>
                   </div>
                 </div>
 
@@ -181,7 +215,7 @@ export default function CommunityFeedSection() {
                       <div className="bg-white/[0.03] p-3 rounded-2xl flex-1 border border-white/[0.04]">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-white">{comment.userName}</span>
-                          <span className="text-[10px] text-zinc-500">{comment.createdAt}</span>
+                          <span className="text-[10px] text-zinc-500">{formatPostDate(comment.createdAt)}</span>
                         </div>
                         <p className="text-zinc-300">{comment.content}</p>
                       </div>

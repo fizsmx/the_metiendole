@@ -23,68 +23,25 @@ async function main() {
   await prisma.user.deleteMany();
   await prisma.streamEvent.deleteMany();
 
-  // 2. Crear Usuarios
+  // 2. Crear Único Usuario Host / Super Admin Real (Fisbert Chávez)
   const adminUser = await prisma.user.create({
     data: {
       name: 'Fisbert Chávez (Metele Nomás)',
       nickname: 'metelenomas_tv',
-      email: 'host@metelenomas.com',
+      email: 'fisbertdarck@gmail.com',
       image: '/images/brand/logo-circle.png',
       banner: '/images/brand/banner.jpg',
-      bio: '🎙️ Creador y Host de Metele Nomás Podcast & Stream. ¡Bienvenidos a la mejor comunidad!',
+      bio: '🎙️ Creador y Host de Metele Nomás Podcast & Stream. ¡Bienvenidos a la plataforma oficial!',
       role: 'ADMIN',
-      points: 9999,
-      level: 5,
-      streak: 45,
-      youtubeHandle: '@metelenomas',
-      discordTag: 'Fisbert#0001',
-    },
-  });
-
-  const user1 = await prisma.user.create({
-    data: {
-      name: 'Nico Gamer',
-      nickname: 'NicoElMetedor',
-      email: 'nico@example.com',
-      image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      bio: '🎮 Fan #1 de los directos de los viernes. No me pierdo ningún debate!',
-      role: 'VIP',
-      points: 2450,
-      level: 4,
-      streak: 18,
-      youtubeHandle: '@nicomete',
-    },
-  });
-
-  const user2 = await prisma.user.create({
-    data: {
-      name: 'Camila Rojas',
-      nickname: 'CamiStream',
-      email: 'cami@example.com',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-      bio: '✨ Clips lover & moderadora de corazón. ¡A meterle con todo!',
-      role: 'MODERATOR',
-      points: 3800,
-      level: 4,
-      streak: 27,
-    },
-  });
-
-  const user3 = await prisma.user.create({
-    data: {
-      name: 'Lucas Mendez',
-      nickname: 'Lucas_OP',
-      email: 'lucas@example.com',
-      image: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-      bio: 'Cazador de sorteos y creador de memes.',
-      role: 'MEMBER',
-      points: 820,
+      points: 1000,
       level: 3,
-      streak: 9,
+      streak: 1,
+      youtubeHandle: '@metelenomas',
+      discordTag: 'Fisbert',
     },
   });
 
-  // 3. Crear Logros (Achievements)
+  // 3. Crear Logros (Achievements) oficiales
   const achievements = await Promise.all([
     prisma.achievement.create({
       data: {
@@ -133,35 +90,22 @@ async function main() {
     }),
   ]);
 
-  // Asignar algunos logros
   await prisma.userAchievement.create({
     data: {
-      userId: user1.id,
-      achievementId: achievements[0].id,
-    },
-  });
-  await prisma.userAchievement.create({
-    data: {
-      userId: user1.id,
-      achievementId: achievements[1].id,
-    },
-  });
-  await prisma.userAchievement.create({
-    data: {
-      userId: user2.id,
+      userId: adminUser.id,
       achievementId: achievements[0].id,
     },
   });
 
-  // 4. Crear Sorteos (Giveaways)
+  // 4. Crear Sorteos Oficiales (Sin participantes falsos)
   const now = new Date();
   const endsIn3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
   const endsIn7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const giveaway1 = await prisma.giveaway.create({
+  await prisma.giveaway.create({
     data: {
       title: '🎧 Auriculares Gamer HyperX Cloud II + Polera Oficial',
-      description: '¡Sorteo de fin de mes para toda la banda de Metele Nomás! Entra gratis y gana los cascos que usamos en cabina.',
+      description: '¡Sorteo de fin de mes para toda la banda de Metele Nomás! Entra con tus puntos y participa en vivo por la ruleta.',
       prize: 'HyperX Cloud II + Merch Oficial',
       imageUrl: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=80',
       costPoints: 50,
@@ -173,7 +117,7 @@ async function main() {
     },
   });
 
-  const giveaway2 = await prisma.giveaway.create({
+  await prisma.giveaway.create({
     data: {
       title: '🎟️ Pase VIP para la Cabina del Podcast + Cena con el Equipo',
       description: 'Acceso exclusivo al detrás de cámaras del próximo episodio en vivo de Metele Nomás.',
@@ -188,19 +132,8 @@ async function main() {
     },
   });
 
-  // Entradas al sorteo
-  await prisma.giveawayEntry.create({
-    data: { giveawayId: giveaway1.id, userId: user1.id },
-  });
-  await prisma.giveawayEntry.create({
-    data: { giveawayId: giveaway1.id, userId: user2.id },
-  });
-  await prisma.giveawayEntry.create({
-    data: { giveawayId: giveaway1.id, userId: user3.id },
-  });
-
-  // 5. Crear Encuestas / Votaciones
-  const poll1 = await prisma.poll.create({
+  // 5. Crear Votaciones Oficiales (Sin votos falsos)
+  await prisma.poll.create({
     data: {
       question: '🎙️ ¿Qué tema o invitado quieren para el próximo capítulo del Podcast?',
       description: 'Vota y decide el contenido del próximo viernes. La opción ganadora se graba este fin de semana.',
@@ -217,13 +150,12 @@ async function main() {
         ],
       },
     },
-    include: { options: true },
   });
 
-  const poll2 = await prisma.poll.create({
+  await prisma.poll.create({
     data: {
-      question: '🍕 ¿Qué ordenamos para comer durante el stream maratón de 12 horas?',
-      description: 'Votación rápida comunitaria.',
+      question: '🍕 ¿Qué ordenamos para comer durante el stream?',
+      description: 'Votación rápida comunitaria en vivo.',
       category: 'COMUNIDAD',
       featured: false,
       active: true,
@@ -231,97 +163,30 @@ async function main() {
         create: [
           { text: 'Pizza con extra queso y borde de jamón', order: 1 },
           { text: 'Hamburguesas gigantes smash', order: 2 },
-          { text: 'Alitas ultra picantes (reto en vivo si gana)', order: 3 },
-          { text: 'Sushi rolls variados', order: 4 },
+          { text: 'Alitas ultra picantes (reto en vivo)', order: 3 },
         ],
       },
     },
-    include: { options: true },
   });
 
-  // Votos en la encuesta 1
-  await prisma.pollVote.create({
-    data: { pollId: poll1.id, optionId: poll1.options[0].id, userId: user1.id },
-  });
-  await prisma.pollVote.create({
-    data: { pollId: poll1.id, optionId: poll1.options[0].id, userId: user2.id },
-  });
-  await prisma.pollVote.create({
-    data: { pollId: poll1.id, optionId: poll1.options[1].id, userId: user3.id },
-  });
-
-  // 6. Crear Posts en el Muro Social
-  const post1 = await prisma.post.create({
+  // 6. Publicación Oficial de Bienvenida en el Muro (Sin comentarios falsos, sin reacciones falsas)
+  await prisma.post.create({
     data: {
       userId: adminUser.id,
-      content: '¡BIEVENIDOS OFICIALMENTE a la plataforma de la comunidad de METELE NOMÁS! 🚀 Aquí van a poder votar temas, participar en sorteos, acumular puntos y reclamar recompensas exclusivas. ¡Comenten abajo qué les parece la nueva casa! 👇',
+      content: '¡BIENVENIDOS OFICIALMENTE a la plataforma de la comunidad de METELE NOMÁS! 🚀 Aquí van a poder votar temas, participar en sorteos, acumular puntos y reclamar recompensas exclusivas. ¡Comenten abajo qué les parece la nueva casa! 👇',
       pinned: true,
       category: 'ANUNCIO',
-      comments: {
-        create: [
-          {
-            userId: user1.id,
-            content: '¡Ufff quedó brutal la plataforma! Ya metí mis votos para el sorteo 🔥',
-          },
-          {
-            userId: user2.id,
-            content: 'El diseño oscuro con los colores del podcast está a otro nivel, felicitaciones Fisbert! 👏',
-          },
-        ],
-      },
     },
   });
 
-  await prisma.reaction.create({
-    data: { postId: post1.id, userId: user1.id, type: 'FIRE' },
-  });
-  await prisma.reaction.create({
-    data: { postId: post1.id, userId: user2.id, type: 'FIRE' },
-  });
-  await prisma.reaction.create({
-    data: { postId: post1.id, userId: user3.id, type: 'ROCKET' },
-  });
-
-  const post2 = await prisma.post.create({
-    data: {
-      userId: user1.id,
-      content: '¿Quién más listo para el stream de este viernes? Se viene el debate caliente y los sorteos en vivo. ¡No se olviden de hacer login diario para sumar su racha!',
-      category: 'GENERAL',
-      comments: {
-        create: [
-          {
-            userId: user3.id,
-            content: 'Presente desde las 7pm sin falta 👊',
-          },
-        ],
-      },
-    },
-  });
-
-  await prisma.reaction.create({
-    data: { postId: post2.id, userId: user2.id, type: 'HEART' },
-  });
-
-  // 7. Crear Clips Épicos
+  // 7. Clip Oficial de Bienvenida
   await prisma.clip.create({
     data: {
       userId: adminUser.id,
-      title: 'El momento más insólito del podcast #42 💀',
-      description: 'Cuando se cayó el micrófono en pleno debate y nadie pudo aguantar la risa.',
-      videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      title: '🎙️ Bienvenidos a Metele Nomás Podcast',
+      description: 'El podcast donde hablamos sin filtro de todo lo que pasa en el streaming y la cultura pop.',
+      videoUrl: 'https://www.youtube.com/@metelenomas',
       thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80',
-      category: 'FUNNY',
-      isStaffPick: true,
-    },
-  });
-
-  await prisma.clip.create({
-    data: {
-      userId: user2.id,
-      title: 'Remontada legendaria en vivo 🏆',
-      description: 'Quedando 1v4 en el stream de juegos. ¡Clip salvaje!',
-      videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&auto=format&fit=crop&q=80',
       category: 'EPICO',
       isStaffPick: true,
     },
