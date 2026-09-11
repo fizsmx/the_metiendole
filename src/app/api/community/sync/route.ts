@@ -155,7 +155,14 @@ export async function GET() {
       posts,
     });
   } catch (error) {
-    console.error('Error syncing community data:', error);
-    return NextResponse.json({ error: 'Error al sincronizar datos' }, { status: 500 });
+    console.error('Error syncing community data from db, using graceful fallback:', error);
+    return NextResponse.json({
+      success: true,
+      giveaways: [],
+      polls: [],
+      leaderboard: [],
+      posts: [],
+      fallback: true,
+    });
   }
 }
