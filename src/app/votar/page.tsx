@@ -221,7 +221,12 @@ export default function VotarPage() {
 
             <p className="flex items-start gap-2 text-xs text-zinc-500">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-              Tu número solo se usa para comprobar que eres de la comunidad y que nadie vote dos veces. No se muestra a nadie.
+              <span>
+                Tu número solo se usa para comprobar que eres de la comunidad y que nadie vote dos veces. No se muestra a nadie.{' '}
+                <a href="/privacidad" className="underline">
+                  Privacidad
+                </a>
+              </span>
             </p>
           </>
         )}
