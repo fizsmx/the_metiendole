@@ -6,6 +6,7 @@ import { ChevronRight, Crown, Skull, Sparkles, Swords } from 'lucide-react';
 import Wheel, { WheelItem } from './Wheel';
 import Confetti from './Confetti';
 import { ScreenFlash, Sticker } from './Fx';
+import PhoneActions from './PhoneActions';
 import { FINALISTS, Participant, SorteoState, displayName, nowIso, randomInt, sfx, shownPhone, whoIs } from './lib';
 
 type Props = {
@@ -332,7 +333,7 @@ export function FinalElimination({ state, update, byId, reveal }: Props) {
               layout
               key={id}
               className={`flex items-center justify-between rounded-xl border px-4 py-1.5 ${
-                out ? 'border-red-900/40 bg-red-950/20 opacity-50' : 'border-[#2a2a3e] bg-white/[0.03]'
+                out ? 'border-red-900/40 bg-red-950/20 [&>div:first-child]:opacity-50' : 'border-[#2a2a3e] bg-white/[0.03]'
               }`}
             >
               <div className="min-w-0 text-left">
@@ -342,13 +343,16 @@ export function FinalElimination({ state, update, byId, reveal }: Props) {
                   {whoIs(p) && <> · {whoIs(p)}</>}
                 </div>
               </div>
-              {out ? (
-                <span className="flex items-center gap-1 text-xs font-bold text-red-400">
-                  <Skull className="h-3.5 w-3.5" /> #{place}
-                </span>
-              ) : (
-                <span className="text-xs font-bold text-[#10B981]">En juego</span>
-              )}
+              <div className="ml-3 flex shrink-0 items-center gap-3">
+                {p && <PhoneActions phone={p.phone} compact />}
+                {out ? (
+                  <span className="flex w-16 items-center justify-end gap-1 text-xs font-bold text-red-400">
+                    <Skull className="h-3.5 w-3.5" /> #{place}
+                  </span>
+                ) : (
+                  <span className="w-16 text-right text-xs font-bold text-[#10B981]">En juego</span>
+                )}
+              </div>
             </motion.div>
           );
         })}
