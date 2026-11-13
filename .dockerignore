@@ -1,0 +1,11 @@
+node_modules
+.next
+.next-prod
+.git
+*.tsbuildinfo
+# datos personales y secretos: nunca dentro de la imagen
+data
+.env
+.env.*
+prisma/*.db
+prisma/*.db-journal

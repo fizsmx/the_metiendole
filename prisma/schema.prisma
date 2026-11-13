@@ -290,3 +290,29 @@ model StreamEvent {
   isLive      Boolean  @default(false)
   createdAt   DateTime @default(now())
 }
+// 🗳️ Votación pública de la final del Gran Sorteo (/votar)
+model SorteoPoll {
+  id          String       @id @default(cuid())
+  optionAId   String // teléfono del finalista A (nunca se envía al público)
+  optionAName String
+  optionBId   String
+  optionBName String
+  status      String       @default("open") // open | closed
+  createdAt   DateTime     @default(now())
+  closedAt    DateTime?
+  votes       SorteoVote[]
+}
+
+model SorteoVote {
+  id        String     @id @default(cuid())
+  pollId    String
+  poll      SorteoPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  email     String // cuenta de Google que votó
+  phone     String // número de WhatsApp del miembro de la comunidad
+  choice    String // "A" | "B"
+  createdAt DateTime   @default(now())
+
+  // un voto por cuenta de Google y un voto por número
+  @@unique([pollId, email])
+  @@unique([pollId, phone])
+}

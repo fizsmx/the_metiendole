@@ -7,6 +7,10 @@ import { isSuperAdminEmail } from '@/lib/constants';
 
 const isPostgres = !!process.env.DATABASE_URL?.startsWith('postgres');
 
+// "Acceso Directo" entra solo con un correo, sin contraseña: cualquiera podría hacerse pasar por otro
+// (incluido el admin). Solo se habilita en desarrollo, o explícitamente con AUTH_ALLOW_DIRECT_LOGIN=true.
+const directLoginEnabled = process.env.NODE_ENV !== 'production' || process.env.AUTH_ALLOW_DIRECT_LOGIN === 'true';
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'metele-nomas-super-secret-key-2026-xyz123!',
@@ -20,6 +24,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: (process.env.GOOGLE_CLIENT_SECRET || '').trim(),
       allowDangerousEmailAccountLinking: true,
     }),
+    ...(directLoginEnabled
+      ? [
     Credentials({
       name: 'Acceso Directo',
       credentials: {
@@ -86,6 +92,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       },
     }),
+        ]
+      : []),
   ],
   callbacks: {
     async signIn({ user }) {
@@ -129,7 +137,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      // proveedor con el que inició sesión (la votación pública solo acepta 'google')
+      if (account?.provider) token.provider = account.provider;
       if (user) {
         token.id = user.id || token.sub || 'usr_' + Math.random().toString(36).slice(2, 8);
         token.name = user.name;
@@ -170,6 +180,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.level = typeof token.level === 'number' ? token.level : 1;
         session.user.streak = typeof token.streak === 'number' ? token.streak : 1;
         session.user.nickname = (token.nickname as string) || session.user.name || 'Metedor';
+        session.user.provider = (token.provider as string) || undefined;
       }
       return session;
     },

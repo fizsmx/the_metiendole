@@ -45,3 +45,6 @@ next-env.d.ts
 *.db-journal
 *.sqlite
 
+
+# datos personales (sorteos)
+/data/

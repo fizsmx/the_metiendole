@@ -186,6 +186,12 @@ body {
 
 /* ===== Gradient Utilities ===== */
 
+/* Tipografía display (Roca One → Syncopate) usada en el sorteo */
+.font-roca {
+  font-family: var(--font-mn-display), var(--font-space-grotesk), sans-serif;
+  letter-spacing: 0.25em;
+}
+
 .gradient-text {
   background: var(--mn-gradient);
   -webkit-background-clip: text;

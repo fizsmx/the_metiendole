@@ -9,6 +9,7 @@ declare module 'next-auth' {
       level: number;
       streak: number;
       nickname: string;
+      provider?: string;
     } & DefaultSession['user'];
   }
 
@@ -25,6 +26,7 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     id?: string;
+    provider?: string;
     role?: 'ADMIN' | 'MODERATOR' | 'VIP' | 'MEMBER' | string;
     points?: number;
     level?: number;
