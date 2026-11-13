@@ -40,6 +40,8 @@ services:
       NEXT_PUBLIC_COMMUNITY_NAME: ${NEXT_PUBLIC_COMMUNITY_NAME}
       # Base propia de producción (votos reales), separada de la de desarrollo
       DATABASE_URL: file:/app/db/prod.db
+      # El público solo ve /votar (el admin usa /sorteo con Google). Ver src/proxy.ts
+      VOTE_ONLY_MODE: "true"
     ports:
       - "127.0.0.1:3100:3000"
     volumes:
