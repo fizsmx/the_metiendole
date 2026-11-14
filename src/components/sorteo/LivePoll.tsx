@@ -93,6 +93,22 @@ export default function LivePoll({ state, update }: Props) {
     }
   };
 
+  // Al llegar a la votación con los 2 finalistas, la votación web se abre sola (una sola vez)
+  const autoOpened = useRef(false);
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
+  });
+  useEffect(() => {
+    if (state.pollId || state.finalists2.length !== 2) return;
+    const t = setTimeout(() => {
+      if (autoOpened.current) return;
+      autoOpened.current = true;
+      void openRef.current();
+    }, 800);
+    return () => clearTimeout(t);
+  }, [state.pollId, state.finalists2.length]);
+
   const setStatus = async (action: 'close' | 'reopen') => {
     if (!state.pollId) return;
     setBusy(true);
@@ -137,7 +153,7 @@ export default function LivePoll({ state, update }: Props) {
           disabled={busy || state.finalists2.length !== 2}
           className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#10B981] to-[#06B6D4] px-8 py-3.5 text-lg font-black text-white shadow-[0_0_30px_rgba(16,185,129,0.4)] transition hover:scale-[1.03] disabled:opacity-50"
         >
-          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Globe className="h-5 w-5" />} Abrir votación en la web
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Globe className="h-5 w-5" />} {busy ? 'Abriendo votación…' : 'Abrir votación en la web'}
         </button>
         {error && <p className="text-sm text-red-300">{error}</p>}
       </div>

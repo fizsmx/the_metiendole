@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronRight, Crown, Skull, Sparkles, Swords } from 'lucide-react';
 import Wheel, { WheelItem } from './Wheel';
@@ -202,6 +202,38 @@ export function FinalElimination({ state, update, byId, reveal }: Props) {
   const [flash, setFlash] = useState(0);
   const items = useMemo(() => toItems(remaining, byId, reveal), [remaining, byId, reveal]);
 
+  // Cuando quedan los 2 finalistas, se detecta solo: festejo + cuenta regresiva y pasa a la votación
+  const AUTO_SECONDS = 6;
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const goVoting = useCallback(
+    () =>
+      update((s) =>
+        s.phase !== 'final'
+          ? s
+          : {
+              ...s,
+              phase: 'votacion',
+              finalists2: s.finalists10.filter((id) => !s.eliminated.includes(id)),
+              log: [...s.log, { at: nowIso(), msg: 'Final terminada: quedan 2 finalistas, inicia la votación' }],
+            },
+      ),
+    [update],
+  );
+  useEffect(() => {
+    if (!done) return;
+    sfx.fanfare();
+    const t0 = Date.now();
+    const t = setInterval(() => {
+      const left = AUTO_SECONDS - Math.floor((Date.now() - t0) / 1000);
+      setCountdown(Math.max(0, left));
+      if (left <= 0) {
+        clearInterval(t);
+        goVoting();
+      }
+    }, 250);
+    return () => clearInterval(t);
+  }, [done, goVoting]);
+
   const spin = () => {
     if (spinning || done) return;
     setLanded(null);
@@ -303,19 +335,20 @@ export function FinalElimination({ state, update, byId, reveal }: Props) {
                 );
               })}
             </div>
+            <motion.p
+              key={countdown ?? AUTO_SECONDS}
+              initial={{ scale: 1.4, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-lg font-bold text-zinc-300"
+            >
+              La votación se abre sola en <b className="font-heading text-2xl text-white">{countdown ?? AUTO_SECONDS}</b>…
+            </motion.p>
             <button
               data-main
-              onClick={() =>
-                update((s) => ({
-                  ...s,
-                  phase: 'votacion',
-                  finalists2: remaining,
-                  log: [...s.log, { at: nowIso(), msg: 'Finalistas definidos, inicia la votación' }],
-                }))
-              }
+              onClick={goVoting}
               className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#ef1b77] to-[#ff9343] px-10 py-4 text-lg font-black text-white shadow-lg transition hover:scale-[1.03]"
             >
-              Ir a la votación <ChevronRight className="h-5 w-5" />
+              Ir a la votación ahora <ChevronRight className="h-5 w-5" />
             </button>
           </>
         )}
