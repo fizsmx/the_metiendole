@@ -4,6 +4,7 @@
 
 **Full-stack interactive community hub for the MeteleNomas streaming channel**, featuring user authentication, gamified XP/levels & daily streaks, live giveaways with an OBS-ready roulette overlay, community polls, clips, and an admin control panel.
 
+[![CI](https://github.com/fizsmx/the_metiendole/actions/workflows/ci.yml/badge.svg)](https://github.com/fizsmx/the_metiendole/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-the--metiendole.vercel.app-38B2AC?style=for-the-badge&logo=vercel&logoColor=white)](https://the-metiendole.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
